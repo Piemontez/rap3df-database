@@ -11,7 +11,9 @@
 
 Context *Context::_instance = 0;
 
-Context::Context()
+Context::Context():
+    rgb(640*480*3),
+    depth(640*480)
 {
     device = FreenectDevice::createDevice();
 
@@ -70,7 +72,7 @@ void Context::initGlLoop(int argc, char **argv)
         glLoadIdentity();
         gluPerspective(50.0, (float)width / height, 1.0, 12000.0);
 
-        glMatrixMode(GL_MODELVIEW);
+//        glMatrixMode(GL_MODELVIEW);
     });
 
     glutKeyboardFunc([] (unsigned char key, int x, int y) {
@@ -101,10 +103,15 @@ void Context::addViewport(ContextViewPort* viewport)
 }
 
 void Context::notify() {
+    cam->move(0.2);
+
+    device->getRGB(rgb);
+    device->getDepth(depth);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it)
-        (*it)->update();
+        (*it)->update(rgb, depth);
 
     glFlush();
     glutSwapBuffers();

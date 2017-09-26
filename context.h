@@ -2,6 +2,7 @@
 #define CONTEXT_H
 
 #include <list>
+#include <vector>
 
 template <class T> class Vec3;
 class FreenectDevice;
@@ -10,7 +11,7 @@ class Camera;
 class ContextViewPort
 {
 public:
-    virtual void update() = 0;
+    virtual void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) = 0;
 };
 
 class Context
@@ -29,6 +30,9 @@ public:
     int height;
 
     std::list<ContextViewPort*> viewports;
+
+    std::vector<uint8_t> rgb;
+    std::vector<uint16_t> depth;
 
     static Context *instance()
     {

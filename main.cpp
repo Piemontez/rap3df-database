@@ -56,14 +56,8 @@ void MakeVertex(int pos, uint16_t depth) {
                 depth );
 }
 
-void DrawStereoCamPoints(bool triangles)
+void DrawStereoCamPoints(bool triangles, std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth)
 {
-    static std::vector<uint8_t> rgb(640*480*3);
-    static std::vector<uint16_t> depth(640*480);
-
-    context->device->getRGB(rgb);
-    context->device->getDepth(depth);
-
     if (triangles) {
         glBegin(GL_TRIANGLES);
         for (int j, i = 0; i < 480*638; ++i)
@@ -148,7 +142,8 @@ void DrawBoxForCapture()
 class InfoViewPort: public ContextViewPort
 {
 public:
-    void update() {
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+
         glViewport(0, 0, context->width, context->height);
 
         glMatrixMode(GL_PROJECTION);
@@ -190,9 +185,7 @@ public:
 class PointCamViewPort: public ContextViewPort
 {
 public:
-    void update() {
-
-        context->cam->move(0.2);
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -204,17 +197,16 @@ public:
             glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
             glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
-            DrawStereoCamPoints(false);
+            DrawStereoCamPoints(false, rgb, depth);
 
             glViewport(context->width/2, context->height/2, context->width/2, context->height/2);
-            DrawStereoCamPoints(true);
+            DrawStereoCamPoints(true, rgb, depth);
     //        DrawBoxForCapture();
         }
 
         // Place the camera
 
     //    glScalef(zoom, zoom, 1);
-
 
     }
 };
