@@ -44,6 +44,8 @@ Vec3<int>* boxPos;
 Vec3<int>* boxDim;
 
 int window(0);                // Glut window identifier
+int mWidth;
+int mHeight;
 
 void MakeVertex(int pos, uint16_t depth) {
     float f = 595.f;
@@ -53,7 +55,7 @@ void MakeVertex(int pos, uint16_t depth) {
                 depth );
 }
 
-void DrawStereoCamPoints()
+void DrawStereoCamPoints(bool triangles)
 {
     static std::vector<uint8_t> rgb(640*480*3);
     static std::vector<uint16_t> depth(640*480);
@@ -61,72 +63,87 @@ void DrawStereoCamPoints()
     device->getRGB(rgb);
     device->getDepth(depth);
 
-    glBegin(GL_TRIANGLES);
-    for (int j, i = 0; i < 480*638; ++i)
-    {
-        glColor3ub( rgb[3*i+0],    // R
-                    rgb[3*i+1],    // G
-                    rgb[3*i+2] );  // B
+    if (triangles) {
+        glBegin(GL_TRIANGLES);
+        for (int j, i = 0; i < 480*638; ++i)
+        {
+            glColor3ub( rgb[3*i+0],    // R
+                        rgb[3*i+1],    // G
+                        rgb[3*i+2] );  // B
 
-                         // Z = d
+                             // Z = d
 
-        if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
-            j = i;
-            MakeVertex(j, depth[j]);
-            j = i+1;
-            MakeVertex(j, depth[j]);
-            j = i+640;
-            MakeVertex(j, depth[j]);
+            if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
+                j = i;
+                MakeVertex(j, depth[j]);
+                j = i+1;
+                MakeVertex(j, depth[j]);
+                j = i+640;
+                MakeVertex(j, depth[j]);
 
-            j = i+1;
-            MakeVertex(j, depth[j]);
-            j = i+640;
-            MakeVertex(j, depth[j]);
-            j = i+641;
-            MakeVertex(j, depth[j]);
+                j = i+1;
+                MakeVertex(j, depth[j]);
+                j = i+640;
+                MakeVertex(j, depth[j]);
+                j = i+641;
+                MakeVertex(j, depth[j]);
+            }
+
         }
+        glEnd();
+    } else {
+        glBegin(GL_POINTS);
+        for (int i = 0; i < 480*640; ++i)
+        {
+            glColor3ub( rgb[3*i+0],    // R
+                        rgb[3*i+1],    // G
+                        rgb[3*i+2] );  // B
 
+            MakeVertex(i, depth[i]);
+        }
+        glEnd();
     }
-    glEnd();
-
 }
 
 void DrawBoxForCapture()
 {
     // Draw the world coordinate frame
-    glLineWidth(2.0f);
-    glBegin(GL_LINES);
-    glColor3ub(255, 0, 0);  // X-axis
-    glVertex3f(  0, 0, 0);
-    glVertex3f( 50, 0, 0);
-    glColor3ub(0, 255, 0);  // Y-axis
-    glVertex3f(0,   0, 0);
-    glVertex3f(0,  50, 0);
-    glColor3ub(0, 0, 255);  // Z-axis
-    glVertex3f(0, 0,   0);
-    glVertex3f(0, 0,  50);
+    //Todo: improve
+    glBegin(GL_QUADS);
+        glColor4f(0, 0,  1, 0.4);
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+
+        glColor4f(0, 0,  0.5, 0.2);
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+
+        glColor4f(0, 1,  0, 0.8);
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+        glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
     glEnd();
-
-    glLineWidth(5.0f);
-    glNormal3f(0.0, 0.0, 1.0);
-
-    int x,y,z;
-    for (int k = 0; k < 3; k++) {
-        x=0; y=0; z=0;
-        for (int j = -1; j < 2; j+=2)
-        {
-            glBegin(GL_LINE_LOOP);
-                glVertex3f(-300, -100, boxPos->getZ() + (boxDim->getZ() * j));
-                glVertex3f(+300, -100, boxPos->getZ() + (boxDim->getZ() * j));
-                glVertex3f(+300, +100, boxPos->getZ() + (boxDim->getZ() * j));
-                glVertex3f(-300, +100, boxPos->getZ() + (boxDim->getZ() * j));
-            glEnd();
-        }
-    }
 //    glColor3ub(0, 255, 0);  // X-axis
 }
 
 void DrawPainel() {
+    glViewport(0, 0, mWidth, mHeight);
+
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     {
@@ -171,13 +188,18 @@ void DrawGLScene()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     {
+        glViewport(0, mHeight/2, mWidth/2, mHeight/2);
+
         glRotatef(cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
         glRotatef(cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
         glRotatef(cam->getZRot(), 0.0f, 0.0f, 1.0f);
         glTranslatef( -cam->getXPos(), -cam->getYPos(), -cam->getZPos() );
 
-        DrawStereoCamPoints();
-        DrawBoxForCapture();
+        DrawStereoCamPoints(false);
+
+        glViewport(mWidth/2, mHeight/2, mWidth/2, mHeight/2);
+        DrawStereoCamPoints(true);
+//        DrawBoxForCapture();
     }
 
     DrawPainel();
@@ -194,10 +216,13 @@ void DrawGLScene()
 
 void resizeGLScene(int width, int height)
 {
+    mWidth = width;
+    mHeight = height;
+
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(50.0, (float)width / height, 900.0, 11000.0);
+    gluPerspective(50.0, (float)width / height, 1.0, 12000.0);
 
     glMatrixMode(GL_MODELVIEW);
 }
@@ -216,13 +241,16 @@ int main(int argc, char **argv)
     device->startDepth();
 
     cam = new Camera;
-    boxPos = new Vec3<int>(0,0, 1400);
+    boxPos = new Vec3<int>(0,0, 1500);
     boxDim = new Vec3<int>(200, 300, 300);
+
+    mWidth = 640;
+    mHeight = 480;
 
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(640, 480);
+    glutInitWindowSize(mWidth, mHeight);
     glutInitWindowPosition(0, 0);
 
     window = glutCreateWindow("RAP3DF");
@@ -230,6 +258,9 @@ int main(int argc, char **argv)
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_ALPHA_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glAlphaFunc(GL_GREATER, 0.0f);
 
     glMatrixMode(GL_PROJECTION);
