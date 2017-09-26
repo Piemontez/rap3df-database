@@ -13,7 +13,7 @@ include_directories (${CMAKE_CURRENT_SOURCE_DIR}/include)
     include_directories(. ${THREADS_PTHREADS_INCLUDE_DIR} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
 
     #add_executable(freenect-cppview cppview.cpp)
-    add_executable(freenect-facecolection main.cpp freenectdevice.cpp camera.cpp)
+    add_executable(freenect-facecolection main.cpp context.cpp freenectdevice.cpp camera.cpp)
 
     #target_link_libraries(freenect-cppview freenect ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
     target_link_libraries(freenect-facecolection freenect glfw ${OPENGL_LIBRARIES} ${GLUT_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})

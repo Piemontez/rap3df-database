@@ -68,4 +68,4 @@ private:
     bool m_new_depth_frame;
 };
 
-#endif // CAMERA_H
+#endif // FRENECT_DEVICE_H
