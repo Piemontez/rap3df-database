@@ -27,8 +27,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-#include <pthread.h>
-#include <libfreenect.hpp>
 
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -36,122 +34,24 @@
 #include <GL/glut.h>
 #endif
 
-#include <camera.h>
+#include "camera.h"
+#include "freenectdevice.h"
 
 
-class Mutex
-{
-public:
-    Mutex()
-    {
-        pthread_mutex_init(&m_mutex, NULL);
-    }
-
-    void lock()
-    {
-        pthread_mutex_lock(&m_mutex);
-    }
-
-    void unlock()
-    {
-        pthread_mutex_unlock(&m_mutex);
-    }
-
-    class ScopedLock
-    {
-    public:
-        ScopedLock(Mutex &mutex) : _mutex(mutex)
-        {
-            _mutex.lock();
-        }
-
-        ~ScopedLock()
-        {
-            _mutex.unlock();
-        }
-
-    private:
-        Mutex &_mutex;
-    };
-
-private:
-    pthread_mutex_t m_mutex;
-};
-
-
-class MyFreenectDevice : public Freenect::FreenectDevice
-{
-public:
-    MyFreenectDevice(freenect_context *_ctx, int _index)
-        : Freenect::FreenectDevice(_ctx, _index),
-          m_buffer_video(freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_VIDEO_RGB).bytes),
-          m_buffer_depth(freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED).bytes / 2),
-          m_new_rgb_frame(false), m_new_depth_frame(false)
-    {
-        setDepthFormat(FREENECT_DEPTH_REGISTERED);
-    }
-
-    // Do not call directly, even in child
-    void VideoCallback(void *_rgb, uint32_t timestamp)
-    {
-        Mutex::ScopedLock lock(m_rgb_mutex);
-        uint8_t* rgb = static_cast<uint8_t*>(_rgb);
-        copy(rgb, rgb+getVideoBufferSize(), m_buffer_video.begin());
-        m_new_rgb_frame = true;
-    }
-
-    // Do not call directly, even in child
-    void DepthCallback(void *_depth, uint32_t timestamp)
-    {
-        Mutex::ScopedLock lock(m_depth_mutex);
-        uint16_t* depth = static_cast<uint16_t*>(_depth);
-        copy(depth, depth+getDepthBufferSize()/2, m_buffer_depth.begin());
-        m_new_depth_frame = true;
-    }
-
-    bool getRGB(std::vector<uint8_t> &buffer)
-    {
-        Mutex::ScopedLock lock(m_rgb_mutex);
-        
-        if (!m_new_rgb_frame)
-            return false;
-
-        buffer.swap(m_buffer_video);
-        m_new_rgb_frame = false;
-
-        return true;
-    }
-
-    bool getDepth(std::vector<uint16_t> &buffer)
-    {
-        Mutex::ScopedLock lock(m_depth_mutex);
-        
-        if (!m_new_depth_frame)
-            return false;
-
-        buffer.swap(m_buffer_depth);
-        m_new_depth_frame = false;
-
-        return true;
-    }
-
-private:
-    Mutex m_rgb_mutex;
-    Mutex m_depth_mutex;
-    std::vector<uint8_t> m_buffer_video;
-    std::vector<uint16_t> m_buffer_depth;
-    bool m_new_rgb_frame;
-    bool m_new_depth_frame;
-};
-
-
-Freenect::Freenect freenect;
-MyFreenectDevice* device;
-Camera *cam;
+FreenectDevice* device;
+Camera* cam;
+Vec3<int>* boxPos;
+Vec3<int>* boxDim;
 
 int window(0);                // Glut window identifier
-bool color = true;            // Flag to indicate to use of color in the cloud
 
+void MakeVertex(int pos, uint16_t depth) {
+    float f = 595.f;
+
+    glVertex3f( (pos%640 - (640-1)/2.f) * depth / f,  // X = (x - cx) * d / fx
+                (pos/640 - (480-1)/2.f) * depth / f,  // Y = (y - cy) * d / fy
+                depth );
+}
 
 void DrawStereoCamPoints()
 {
@@ -161,66 +61,29 @@ void DrawStereoCamPoints()
     device->getRGB(rgb);
     device->getDepth(depth);
 
-    glPointSize(1.0f);
-
-//    glBegin(GL_POINTS);
-//    if (!color) glColor3ub(255, 255, 255);
-//    for (int i = 0; i < 480*640; ++i)
-//    {
-//        if (color)
-//            glColor3ub( rgb[3*i+0],    // R
-//                        rgb[3*i+1],    // G
-//                        rgb[3*i+2] );  // B
-
-//        float f = 595.f;
-//        // Convert from image plane coordinates to world coordinates
-//        glVertex3f( (i%640 - (640-1)/2.f) * depth[i] / f,  // X = (x - cx) * d / fx
-//                    (i/640 - (480-1)/2.f) * depth[i] / f,  // Y = (y - cy) * d / fy
-//                    depth[i] );                            // Z = d
-//    }
-//    glEnd();
-
-
-    int j;
-    float f = 595.f;
-    if (!color) glColor3ub(255, 255, 255);
-
     glBegin(GL_TRIANGLES);
-    for (int i = 0; i < 480*630; ++i)
+    for (int j, i = 0; i < 480*638; ++i)
     {
-        if (color)
-            glColor3ub( rgb[3*i+0],    // R
-                        rgb[3*i+1],    // G
-                        rgb[3*i+2] );  // B
+        glColor3ub( rgb[3*i+0],    // R
+                    rgb[3*i+1],    // G
+                    rgb[3*i+2] );  // B
 
                          // Z = d
 
         if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
             j = i;
-            glVertex3f( (j%640 - (640-1)/2.f) * depth[j] / f,  // X = (x - cx) * d / fx
-                        (j/640 - (480-1)/2.f) * depth[j] / f,  // Y = (y - cy) * d / fy
-                        depth[j] );                            // Z = d
+            MakeVertex(j, depth[j]);
             j = i+1;
-            glVertex3f( (j%640 - (640-1)/2.f) * depth[j] / f,  // X = (x - cx) * d / fx
-                        (j/640 - (480-1)/2.f) * depth[j] / f,  // Y = (y - cy) * d / fy
-                        depth[j] );                            // Z = d
+            MakeVertex(j, depth[j]);
             j = i+640;
-            glVertex3f( (j%640 - (640-1)/2.f) * depth[j] / f,  // X = (x - cx) * d / fx
-                        (j/640 - (480-1)/2.f) * depth[j] / f,  // Y = (y - cy) * d / fy
-                        depth[j] );                            // Z = d
+            MakeVertex(j, depth[j]);
 
             j = i+1;
-            glVertex3f( (j%640 - (640-1)/2.f) * depth[j] / f,  // X = (x - cx) * d / fx
-                        (j/640 - (480-1)/2.f) * depth[j] / f,  // Y = (y - cy) * d / fy
-                        depth[j] );                            // Z = d
+            MakeVertex(j, depth[j]);
             j = i+640;
-            glVertex3f( (j%640 - (640-1)/2.f) * depth[j] / f,  // X = (x - cx) * d / fx
-                        (j/640 - (480-1)/2.f) * depth[j] / f,  // Y = (y - cy) * d / fy
-                        depth[j] );                            // Z = d
+            MakeVertex(j, depth[j]);
             j = i+641;
-            glVertex3f( (j%640 - (640-1)/2.f) * depth[j] / f,  // X = (x - cx) * d / fx
-                        (j/640 - (480-1)/2.f) * depth[j] / f,  // Y = (y - cy) * d / fy
-                        depth[j] );                            // Z = d
+            MakeVertex(j, depth[j]);
         }
 
     }
@@ -243,26 +106,86 @@ void DrawBoxForCapture()
     glVertex3f(0, 0,   0);
     glVertex3f(0, 0,  50);
     glEnd();
+
+    glLineWidth(5.0f);
+    glNormal3f(0.0, 0.0, 1.0);
+
+    int x,y,z;
+    for (int k = 0; k < 3; k++) {
+        x=0; y=0; z=0;
+        for (int j = -1; j < 2; j+=2)
+        {
+            glBegin(GL_LINE_LOOP);
+                glVertex3f(-300, -100, boxPos->getZ() + (boxDim->getZ() * j));
+                glVertex3f(+300, -100, boxPos->getZ() + (boxDim->getZ() * j));
+                glVertex3f(+300, +100, boxPos->getZ() + (boxDim->getZ() * j));
+                glVertex3f(-300, +100, boxPos->getZ() + (boxDim->getZ() * j));
+            glEnd();
+        }
+    }
+//    glColor3ub(0, 255, 0);  // X-axis
+}
+
+void DrawPainel() {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    {
+      glLoadIdentity();
+
+      gluOrtho2D(0.0, 640, 0.0, 480);
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      {
+          glLoadIdentity();
+
+          glRasterPos2i(10, 10);
+          std::string s = "rx" + std::to_string(cam->getXRot())
+                  + " ry" + std::to_string(cam->getYRot())
+                  + " rz" + std::to_string(cam->getZRot())
+                  + " x" + std::to_string(cam->getXPos())
+                  + " y" + std::to_string(cam->getYPos())
+                  + " z" + std::to_string(cam->getZPos());
+          void * font = GLUT_BITMAP_9_BY_15;
+          for (std::string::iterator i = s.begin(); i != s.end(); ++i)
+          {
+            char c = *i;
+            glColor3d(1.0, 0.0, 0.0);
+            glutBitmapCharacter(font, c);
+          }
+
+          glMatrixMode(GL_MODELVIEW);
+      }
+      glPopMatrix();
+
+      glMatrixMode(GL_PROJECTION);
+    }
+    glPopMatrix();
 }
 
 void DrawGLScene()
 {
     cam->move(0.2);
 
-    glMatrixMode(GL_MODELVIEW);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    DrawStereoCamPoints();
-    DrawBoxForCapture();
-
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    {
+        glRotatef(cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
+        glRotatef(cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
+        glRotatef(cam->getZRot(), 0.0f, 0.0f, 1.0f);
+        glTranslatef( -cam->getXPos(), -cam->getYPos(), -cam->getZPos() );
+
+        DrawStereoCamPoints();
+        DrawBoxForCapture();
+    }
+
+    DrawPainel();
+
+    glFlush();
     // Place the camera
 
 //    glScalef(zoom, zoom, 1);
-    glRotatef(cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-    glRotatef(cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-    glRotatef(cam->getZRot(), 0.0f, 0.0f, 1.0f);
-    glTranslatef( -cam->getXPos(), -cam->getYPos(), -cam->getZPos() );
 
     glutSwapBuffers();
 }
@@ -288,12 +211,14 @@ void idleGLScene()
 
 int main(int argc, char **argv)
 {
-    device = &freenect.createDevice<MyFreenectDevice>(0);
+    device = FreenectDevice::createDevice();
     device->startVideo();
     device->startDepth();
 
-    cam = new Camera();
-    
+    cam = new Camera;
+    boxPos = new Vec3<int>(0,0, 1400);
+    boxDim = new Vec3<int>(200, 300, 300);
+
     glutInit(&argc, argv);
 
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
