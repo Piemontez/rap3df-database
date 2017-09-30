@@ -57,6 +57,10 @@ public:
     std::vector<uint8_t> rgbModified; //RGB in the BOX
     std::vector<uint16_t> depthModified; //Depth in the BOX
 
+    std::vector<uint8_t> rgbInBox; //RGB in the BOX
+    std::vector<uint16_t> depthInBox; //Depth in the BOX
+
+
     static Context *instance()
     {
         if (!_instance)

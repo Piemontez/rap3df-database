@@ -1,3 +1,4 @@
+#include <algorithm>
 
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -9,13 +10,17 @@
 #include "camera.h"
 #include "freenectdevice.h"
 
+#include "utils.h"
+
 #define IMAGES_DIR "rap3df_data"
 #define CSV_IMAGES_INFO "database.csv"
 
+std::string uuidFolderName;
+
 //Region tested for context->box
 int extractBegX = 215;
-int extractEndX = 100;
-int extractBegY = 424;
+int extractEndX = 424;
+int extractBegY = 100;
 int extractEndY = 379;
 
 int minX = 640;
@@ -110,7 +115,8 @@ public:
               glColor3ub(0, 0.0, 0.0);
 
               std::string s =
-                      "Box Check" + std::to_string(minX) + 'x' + std::to_string(minY) + "|"
+                      "UUID " + uuidFolderName
+                      + " Box Check" + std::to_string(minX) + 'x' + std::to_string(minY) + "|"
                                   + std::to_string(maxX) + 'x' + std::to_string(maxY)
                       + " rx" + std::to_string(context->cam->getXRot())
                       + " ry" + std::to_string(context->cam->getYRot())
@@ -121,11 +127,11 @@ public:
                       + " z" + std::to_string(context->cam->getZPos())
 
                       + " size" + std::to_string(context->rgb.size());
-              void * font = GLUT_BITMAP_9_BY_15;
+
               for (std::string::iterator i = s.begin(); i != s.end(); ++i)
               {
                 char c = *i;
-                glutBitmapCharacter(font, c);
+                glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
               }
 
               glMatrixMode(GL_MODELVIEW);
@@ -156,6 +162,7 @@ public:
             glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
             glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
+            glPointSize(1.5f);
             glBegin(GL_POINTS);
             for (int i = 0; i < 480*640; ++i)
             {
@@ -225,6 +232,8 @@ public:
 
         context->rgbModified.clear();
         context->depthModified.clear();
+        context->rgbInBox.clear();
+        context->depthInBox.clear();
 
         std::vector<uint8_t>::iterator itRgb = rgb.begin();
         std::vector<uint16_t>::iterator itDepth = depth.begin();
@@ -232,6 +241,15 @@ public:
         for (int j = 0; j < 480; j++) //Rows
             for (int k = 0; k < 640; k++) //Cols
             {
+//                if (k >= extractBegX && k <= extractEndX
+//                 && j >= extractBegY && j <= extractEndY) {
+//                    context->rgbInBox.push_back(*itRgb++);
+//                    context->rgbInBox.push_back(*itRgb++);
+//                    context->rgbInBox.push_back(*itRgb);
+//                    itRgb--;itRgb--;
+
+////                    context->depthInBox.push_back(*itDepth++);
+//                }
 
                 float x = (k - 319.5f) * (*itDepth) / Context::instance()->f;
                 float y = (j - 239.5f) * (*itDepth) / Context::instance()->f;
@@ -281,6 +299,7 @@ public:
             //glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
             glTranslatef( 0, 0, -500 );
 
+            glPointSize(1.0f);
             glBegin(GL_POINTS);
             for (int i = 0; i < 480*640; ++i)
             {
@@ -312,6 +331,7 @@ public:
             glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
             glTranslatef( 500, 0, -1000 );
 
+            glPointSize(1.0f);
             glBegin(GL_POINTS);
             for (int i = 0; i < 480*640; ++i)
             {
@@ -342,6 +362,7 @@ public:
             glRotatef(90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
             glTranslatef( -500, 0, -1000 );
 
+            glPointSize(1.0f);
             glBegin(GL_POINTS);
             for (int i = 0; i < 480*640; ++i)
             {
@@ -358,24 +379,60 @@ public:
     }
 };
 
+class GenerateUUIDAction: public ContextAction
+{
+    void exec() {
+        srand (time(NULL));
+
+        const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        const size_t charmapLength = 36;
+        auto generator = [&](){ return charmap[rand()%charmapLength]; };
+        uuidFolderName.clear(); uuidFolderName.reserve(7);
+        std::generate_n(std::back_inserter(uuidFolderName), 7, generator);
+    }
+};
+
 class SaveImagesAction: public ContextAction
 {
     void exec() {
-        std::string mkdir;
-        mkdir.append("mkdir ").append(IMAGES_DIR);
-        system(mkdir.c_str());
+        std::string path;
+        path.append("mkdir ").append(IMAGES_DIR);
+        system(path.c_str());
+
+        path.clear();
+        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuidFolderName);
+        system(path.c_str());
 
         std::string csvFilePath;
         csvFilePath.append(IMAGES_DIR).append("/").append(CSV_IMAGES_INFO);
 
+        //Save csv database info
         std::FILE * csvFile;
         csvFile = std::fopen(csvFilePath.c_str(),"a");
-
         if (csvFile)
         {
-          std::fputs("fopen example",csvFile);
+          std::fputs((uuidFolderName+";\r\n").c_str(),csvFile);
           std::fclose (csvFile);
+
         }
+
+        //Save original rgb image
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append("original.bmp");
+        WriteBMPFile(context->rgb, path, 640, 480);
+
+        //Save bitmap deth image.
+
+
+        //In box
+        int w = extractEndX - extractBegX;
+        int h = extractEndY - extractBegY;
+
+        //Save original rgb image
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append("box.bmp");
+        WriteBMPFile(context->rgbInBox, path, w, h);
+
     }
 };
 
@@ -397,7 +454,9 @@ int main(int argc, char **argv)
     context->addViewport(new FrontCamViewPort);
     context->addViewport(new RightCamViewPort);
 
-    context->addAction('p', new SaveImagesAction);
+    context->addAction('1', new GenerateUUIDAction);
+//    context->addAction('2', new CreateImagesCacheAction);
+    context->addAction('3', new SaveImagesAction);
 
     context->initGlLoop(argc, argv);
 
