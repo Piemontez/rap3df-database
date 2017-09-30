@@ -175,13 +175,11 @@ public:
             glBegin(GL_TRIANGLES);
             for (int j, i = 0; i < 480*638; ++i)
             {
-                glColor3ub( rgb[3*i+0],    // R
-                            rgb[3*i+1],    // G
-                            rgb[3*i+2] );  // B
-
-                                 // Z = d
-
                 if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
+                    glColor3ub( rgb[3*i+0],    // R
+                                rgb[3*i+1],    // G
+                                rgb[3*i+2] );  // B
+
                     j = i;
                     MakeVertex(j, depth[j]);
                     j = i+1;
@@ -208,22 +206,18 @@ class FrontCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(0, 0, context->width/2, context->height/2);
+        glViewport(0, 0, context->width/3, context->height/3);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-//            glRotatef(0, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-//            glRotatef(0, 0.0f, 0.0f, 1.0f);
+            //glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
+            //glTranslatef( 1000, 0, -1000 );
 
-            glBegin(GL_TRIANGLES);
-            for (int j, i = 0; i < 480*638; ++i)
+            glBegin(GL_POINTS);
+            for (int i = 0; i < 480*638; ++i)
             {
-                glColor3ub( rgb[3*i+0],    // R
-                            rgb[3*i+1],    // G
-                            rgb[3*i+2] );  // B
-
                 float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
                 float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
                 if (x > (context->boxPos->getX() - context->boxDim->getX())
@@ -236,19 +230,11 @@ public:
                     && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
                         )
                 {
-                    j = i;
-                    MakeVertex(j, depth[j]);
-                    j = i+1;
-                    MakeVertex(j, depth[j]);
-                    j = i+640;
-                    MakeVertex(j, depth[j]);
+                    glColor3ub( rgb[3*i+0],    // R
+                                rgb[3*i+1],    // G
+                                rgb[3*i+2] );  // B
 
-                    j = i+1;
-                    MakeVertex(j, depth[j]);
-                    j = i+640;
-                    MakeVertex(j, depth[j]);
-                    j = i+641;
-                    MakeVertex(j, depth[j]);
+                    MakeVertex(i, depth[i]);
                 }
             }
             glEnd();
@@ -256,6 +242,88 @@ public:
     }
 };
 
+
+class LeftCamViewPort: public ContextViewPort
+{
+public:
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+
+        glViewport(context->width/3, 0, context->width/3, context->height/3);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        {
+            glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
+            glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
+            glTranslatef( 1000, 0, -1000 );
+
+            glBegin(GL_POINTS);
+            for (int i = 0; i < 480*638; ++i)
+            {
+                float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
+                float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
+                if (x > (context->boxPos->getX() - context->boxDim->getX())
+                    && x < (context->boxPos->getX() + context->boxDim->getX())
+
+                    && y > (context->boxPos->getY() - context->boxDim->getY())
+                    && y < (context->boxPos->getY() + context->boxDim->getY())
+
+                    && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
+                    && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
+                        )
+                {
+                    glColor3ub( rgb[3*i+0],    // R
+                                rgb[3*i+1],    // G
+                                rgb[3*i+2] );  // B
+
+                    MakeVertex(i, depth[i]);
+                }
+            }
+            glEnd();
+        }
+    }
+};
+
+class RightCamViewPort: public ContextViewPort
+{
+public:
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+
+        glViewport(context->width/3*2, 0, context->width/3, context->height/3);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        {
+            glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
+            glRotatef(90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
+            glTranslatef( -1000, 0, -1000 );
+
+            glBegin(GL_POINTS);
+            for (int i = 0; i < 480*638; ++i)
+            {
+                float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
+                float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
+                if (x > (context->boxPos->getX() - context->boxDim->getX())
+                    && x < (context->boxPos->getX() + context->boxDim->getX())
+
+                    && y > (context->boxPos->getY() - context->boxDim->getY())
+                    && y < (context->boxPos->getY() + context->boxDim->getY())
+
+                    && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
+                    && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
+                        )
+                {
+                    glColor3ub( rgb[3*i+0],    // R
+                                rgb[3*i+1],    // G
+                                rgb[3*i+2] );  // B
+
+                    MakeVertex(i, depth[i]);
+                }
+            }
+            glEnd();
+        }
+    }
+};
 
 int main(int argc, char **argv)
 {
@@ -269,6 +337,8 @@ int main(int argc, char **argv)
         context->addViewport(new BoxCamViewPort);
     }
     context->addViewport(new FrontCamViewPort);
+    context->addViewport(new LeftCamViewPort);
+    context->addViewport(new RightCamViewPort);
 
     context->initGlLoop(argc, argv);
 
