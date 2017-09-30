@@ -61,4 +61,3 @@ FreenectDevice *FreenectDevice::createDevice()
 {
     return &freenect.createDevice<FreenectDevice>(0);
 }
-

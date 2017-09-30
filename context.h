@@ -41,6 +41,10 @@ public:
     std::vector<uint8_t> rgb;
     std::vector<uint16_t> depth;
 
+    std::vector<uint8_t> rgbModified;
+    std::vector<uint16_t> depthModified;
+
+
     static Context *instance()
     {
         if (!_instance)

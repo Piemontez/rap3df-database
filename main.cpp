@@ -108,7 +108,8 @@ public:
                       + " rz" + std::to_string(context->cam->getZRot())
                       + " x" + std::to_string(context->cam->getXPos())
                       + " y" + std::to_string(context->cam->getYPos())
-                      + " z" + std::to_string(context->cam->getZPos());
+                      + " z" + std::to_string(context->cam->getZPos())
+                      + " size" + std::to_string(context->rgb.size());
               void * font = GLUT_BITMAP_9_BY_15;
               for (std::string::iterator i = s.begin(); i != s.end(); ++i)
               {
@@ -201,6 +202,52 @@ public:
 };
 
 
+class BoxExtractViewPort: public ContextViewPort
+{
+public:
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+
+        context->rgbModified.clear();
+        context->depthModified.clear();
+
+        std::vector<uint8_t>::iterator itRgb = rgb.begin();
+        std::vector<uint16_t>::iterator itDepth = depth.begin();
+
+        for (int i = 0; i < 480*640; ++i)
+        {
+
+            float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
+            float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
+
+            if (x > (context->boxPos->getX() - context->boxDim->getX())
+                && x < (context->boxPos->getX() + context->boxDim->getX())
+
+                && y > (context->boxPos->getY() - context->boxDim->getY())
+                && y < (context->boxPos->getY() + context->boxDim->getY())
+
+                && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
+                && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
+                    )
+            {
+                context->rgbModified.push_back(*itRgb++);
+                context->rgbModified.push_back(*itRgb++);
+                context->rgbModified.push_back(*itRgb++);
+
+                context->depthModified.push_back(*itDepth++);
+            } else {
+                context->rgbModified.push_back(0);
+                context->rgbModified.push_back(0);
+                context->rgbModified.push_back(0);
+
+                context->depthModified.push_back(0);
+
+                itRgb+=3;
+                itDepth++;
+            }
+        }
+    }
+};
+
 class FrontCamViewPort: public ContextViewPort
 {
 public:
@@ -213,29 +260,18 @@ public:
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             //glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-            //glTranslatef( 1000, 0, -1000 );
+            glTranslatef( 0, 0, -500 );
 
             glBegin(GL_POINTS);
-            for (int i = 0; i < 480*638; ++i)
+            for (int i = 0; i < 480*640; ++i)
             {
-                float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
-                float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
-                if (x > (context->boxPos->getX() - context->boxDim->getX())
-                    && x < (context->boxPos->getX() + context->boxDim->getX())
+                if (!context->depthModified[i]) continue;
 
-                    && y > (context->boxPos->getY() - context->boxDim->getY())
-                    && y < (context->boxPos->getY() + context->boxDim->getY())
+                glColor3ub( context->rgbModified[3*i+0],    // R
+                            context->rgbModified[3*i+1],    // G
+                            context->rgbModified[3*i+2] );  // B
 
-                    && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
-                    && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
-                        )
-                {
-                    glColor3ub( rgb[3*i+0],    // R
-                                rgb[3*i+1],    // G
-                                rgb[3*i+2] );  // B
-
-                    MakeVertex(i, depth[i]);
-                }
+                MakeVertex(i, context->depthModified[i]);
             }
             glEnd();
         }
@@ -255,29 +291,18 @@ public:
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-            glTranslatef( 1000, 0, -1000 );
+            glTranslatef( 500, 0, -1000 );
 
             glBegin(GL_POINTS);
-            for (int i = 0; i < 480*638; ++i)
+            for (int i = 0; i < 480*640; ++i)
             {
-                float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
-                float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
-                if (x > (context->boxPos->getX() - context->boxDim->getX())
-                    && x < (context->boxPos->getX() + context->boxDim->getX())
+                if (!context->depthModified[i]) continue;
 
-                    && y > (context->boxPos->getY() - context->boxDim->getY())
-                    && y < (context->boxPos->getY() + context->boxDim->getY())
+                glColor3ub( context->rgbModified[3*i+0],    // R
+                            context->rgbModified[3*i+1],    // G
+                            context->rgbModified[3*i+2] );  // B
 
-                    && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
-                    && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
-                        )
-                {
-                    glColor3ub( rgb[3*i+0],    // R
-                                rgb[3*i+1],    // G
-                                rgb[3*i+2] );  // B
-
-                    MakeVertex(i, depth[i]);
-                }
+                MakeVertex(i, context->depthModified[i]);
             }
             glEnd();
         }
@@ -296,29 +321,18 @@ public:
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-            glTranslatef( -1000, 0, -1000 );
+            glTranslatef( -500, 0, -1000 );
 
             glBegin(GL_POINTS);
-            for (int i = 0; i < 480*638; ++i)
+            for (int i = 0; i < 480*640; ++i)
             {
-                float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
-                float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
-                if (x > (context->boxPos->getX() - context->boxDim->getX())
-                    && x < (context->boxPos->getX() + context->boxDim->getX())
+                if (!context->depthModified[i]) continue;
 
-                    && y > (context->boxPos->getY() - context->boxDim->getY())
-                    && y < (context->boxPos->getY() + context->boxDim->getY())
+                glColor3ub( context->rgbModified[3*i+0],    // R
+                            context->rgbModified[3*i+1],    // G
+                            context->rgbModified[3*i+2] );  // B
 
-                    && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
-                    && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
-                        )
-                {
-                    glColor3ub( rgb[3*i+0],    // R
-                                rgb[3*i+1],    // G
-                                rgb[3*i+2] );  // B
-
-                    MakeVertex(i, depth[i]);
-                }
+                MakeVertex(i, context->depthModified[i]);
             }
             glEnd();
         }
@@ -336,6 +350,9 @@ int main(int argc, char **argv)
         context->addViewport(new TrianguleCamViewPort);
         context->addViewport(new BoxCamViewPort);
     }
+
+    context->addViewport(new BoxExtractViewPort);
+
     context->addViewport(new LeftCamViewPort);
     context->addViewport(new FrontCamViewPort);
     context->addViewport(new RightCamViewPort);
