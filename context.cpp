@@ -19,8 +19,8 @@ Context::Context():
 
     cam = new Camera;
 
-    boxPos = new Vec3<int>(0,0, 1100);
-    boxDim = new Vec3<int>(200, 300, 300);
+    boxPos = new Vec3<int>(0,0, 1000);
+    boxDim = new Vec3<int>(150, 200, 150);
 
     width = 640;
     height = 480;
@@ -45,7 +45,7 @@ void Context::initGlLoop(int argc, char **argv)
     glutInitWindowPosition(0, 0);
 
     window = glutCreateWindow("RAP3DF");
-    glClearColor(0.45f, 0.45f, 0.45f, 0.0f);
+    glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_ALPHA_TEST);

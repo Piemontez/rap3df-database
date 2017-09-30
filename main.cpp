@@ -54,32 +54,32 @@ public:
 
         glBegin(GL_QUADS);
             glColor4f(0, 0,  1, 0.4);
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
 
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
 
             glColor4f(0, 0,  0.5, 0.2);
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
 
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
 
             glColor4f(0, 1,  0, 0.8);
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() - boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
-            glVertex3f(boxPos->getX() + boxDim->getY(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
+            glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
         glEnd();
     }
 };
@@ -206,7 +206,7 @@ class FrontCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(0, 0, context->width/3, context->height/3);
+        glViewport(context->width/3, 0, context->width/3, context->height/3);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -248,7 +248,7 @@ class LeftCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(context->width/3, 0, context->width/3, context->height/3);
+        glViewport(0, 0, context->width/3, context->height/3);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -336,8 +336,8 @@ int main(int argc, char **argv)
         context->addViewport(new TrianguleCamViewPort);
         context->addViewport(new BoxCamViewPort);
     }
-    context->addViewport(new FrontCamViewPort);
     context->addViewport(new LeftCamViewPort);
+    context->addViewport(new FrontCamViewPort);
     context->addViewport(new RightCamViewPort);
 
     context->initGlLoop(argc, argv);
