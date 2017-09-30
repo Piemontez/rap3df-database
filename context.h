@@ -38,12 +38,11 @@ public:
 
     std::list<ContextViewPort*> viewports;
 
-    std::vector<uint8_t> rgb;
-    std::vector<uint16_t> depth;
+    std::vector<uint8_t> rgb; //RGB Kinect captured
+    std::vector<uint16_t> depth; //Depth Image Kinect captured
 
-    std::vector<uint8_t> rgbModified;
-    std::vector<uint16_t> depthModified;
-
+    std::vector<uint8_t> rgbModified; //RGB in the BOX
+    std::vector<uint16_t> depthModified; //Depth in the BOX
 
     static Context *instance()
     {

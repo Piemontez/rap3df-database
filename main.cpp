@@ -38,6 +38,26 @@
 #include "camera.h"
 #include "freenectdevice.h"
 
+int minX = 640;
+int minY = 640;
+int maxX = 0;
+int maxY = 0;
+
+void checkRegions(const int& y, const int& x) {
+    if (y > maxY) {
+        maxY = y;
+    }
+    if (y < minY) {
+        minY = y;
+    }
+    if (x > maxX) {
+        maxX = x;
+    }
+    if (x < minX) {
+        minX = x;
+    }
+}
+
 void MakeVertex(int pos, uint16_t depth) {
     glVertex3f( (pos%640 - (640-1)/2.f) * depth / Context::instance()->f,  // X = (x - cx) * d / fx
                 (pos/640 - (480-1)/2.f) * depth / Context::instance()->f,  // Y = (y - cy) * d / fy
@@ -103,12 +123,17 @@ public:
               glLoadIdentity();
 
               glRasterPos2i(10, 10);
-              std::string s = "rx" + std::to_string(context->cam->getXRot())
+              std::string s =
+                      "Box Check" + std::to_string(minY) + 'x' + std::to_string(minX) + " | "
+                                  + std::to_string(maxY) + 'x' + std::to_string(maxX)
+                      + " rx" + std::to_string(context->cam->getXRot())
                       + " ry" + std::to_string(context->cam->getYRot())
                       + " rz" + std::to_string(context->cam->getZRot())
+
                       + " x" + std::to_string(context->cam->getXPos())
                       + " y" + std::to_string(context->cam->getYPos())
                       + " z" + std::to_string(context->cam->getZPos())
+
                       + " size" + std::to_string(context->rgb.size());
               void * font = GLUT_BITMAP_9_BY_15;
               for (std::string::iterator i = s.begin(); i != s.end(); ++i)
@@ -213,38 +238,44 @@ public:
         std::vector<uint8_t>::iterator itRgb = rgb.begin();
         std::vector<uint16_t>::iterator itDepth = depth.begin();
 
-        for (int i = 0; i < 480*640; ++i)
-        {
-
-            float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
-            float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
-
-            if (x > (context->boxPos->getX() - context->boxDim->getX())
-                && x < (context->boxPos->getX() + context->boxDim->getX())
-
-                && y > (context->boxPos->getY() - context->boxDim->getY())
-                && y < (context->boxPos->getY() + context->boxDim->getY())
-
-                && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
-                && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
-                    )
+        int i;
+        for (int j = 0; j < 480; j++)
+            for (int k = 0; k < 640; k++)
+//        for (int i = 0; i < 480*640; ++i)
             {
-                context->rgbModified.push_back(*itRgb++);
-                context->rgbModified.push_back(*itRgb++);
-                context->rgbModified.push_back(*itRgb++);
+                i = (j * 640) + k; // 480 linhas de 640 pixels
 
-                context->depthModified.push_back(*itDepth++);
-            } else {
-                context->rgbModified.push_back(0);
-                context->rgbModified.push_back(0);
-                context->rgbModified.push_back(0);
+                float x = (k - 319.5f) * (*itDepth) / Context::instance()->f;
+                float y = (j - 239.5f) * (*itDepth) / Context::instance()->f;
 
-                context->depthModified.push_back(0);
+                if (x > (context->boxPos->getX() - context->boxDim->getX())
+                    && x < (context->boxPos->getX() + context->boxDim->getX())
 
-                itRgb+=3;
-                itDepth++;
+                    && y > (context->boxPos->getY() - context->boxDim->getY())
+                    && y < (context->boxPos->getY() + context->boxDim->getY())
+
+                    && (*itDepth) > (context->boxPos->getZ() - context->boxDim->getZ())
+                    && (*itDepth) < (context->boxPos->getZ() + context->boxDim->getZ())
+                        )
+                {
+                    checkRegions(j, k);
+
+                    context->rgbModified.push_back(*itRgb++);
+                    context->rgbModified.push_back(*itRgb++);
+                    context->rgbModified.push_back(*itRgb++);
+
+                    context->depthModified.push_back(*itDepth++);
+                } else {
+                    context->rgbModified.push_back(0);
+                    context->rgbModified.push_back(0);
+                    context->rgbModified.push_back(0);
+
+                    context->depthModified.push_back(0);
+
+                    itRgb+=3;
+                    itDepth++;
+                }
             }
-        }
     }
 };
 
