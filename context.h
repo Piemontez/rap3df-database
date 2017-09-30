@@ -34,6 +34,7 @@ public:
 
     int width;
     int height;
+    int f;
 
     std::list<ContextViewPort*> viewports;
 

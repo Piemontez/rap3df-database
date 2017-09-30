@@ -19,11 +19,12 @@ Context::Context():
 
     cam = new Camera;
 
-    boxPos = new Vec3<int>(0,0, 1500);
+    boxPos = new Vec3<int>(0,0, 1100);
     boxDim = new Vec3<int>(200, 300, 300);
 
     width = 640;
     height = 480;
+    f = 595.f;
 
     window = 0;
 }

@@ -39,10 +39,8 @@
 #include "freenectdevice.h"
 
 void MakeVertex(int pos, uint16_t depth) {
-    float f = 595.f;
-
-    glVertex3f( (pos%640 - (640-1)/2.f) * depth / f,  // X = (x - cx) * d / fx
-                (pos/640 - (480-1)/2.f) * depth / f,  // Y = (y - cy) * d / fy
+    glVertex3f( (pos%640 - (640-1)/2.f) * depth / Context::instance()->f,  // X = (x - cx) * d / fx
+                (pos/640 - (480-1)/2.f) * depth / Context::instance()->f,  // Y = (y - cy) * d / fy
                 depth );
 }
 
@@ -205,6 +203,60 @@ public:
 };
 
 
+class FrontCamViewPort: public ContextViewPort
+{
+public:
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+
+        glViewport(0, 0, context->width/2, context->height/2);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        {
+            glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
+//            glRotatef(0, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
+//            glRotatef(0, 0.0f, 0.0f, 1.0f);
+
+            glBegin(GL_TRIANGLES);
+            for (int j, i = 0; i < 480*638; ++i)
+            {
+                glColor3ub( rgb[3*i+0],    // R
+                            rgb[3*i+1],    // G
+                            rgb[3*i+2] );  // B
+
+                float x = (i%640 - (640-1)/2.f) * depth[i] / Context::instance()->f;
+                float y = (i/640 - (480-1)/2.f) * depth[i] / Context::instance()->f;
+                if (x > (context->boxPos->getX() - context->boxDim->getX())
+                    && x < (context->boxPos->getX() + context->boxDim->getX())
+
+                    && y > (context->boxPos->getY() - context->boxDim->getY())
+                    && y < (context->boxPos->getY() + context->boxDim->getY())
+
+                    && depth[i] > (context->boxPos->getZ() - context->boxDim->getZ())
+                    && depth[i] < (context->boxPos->getZ() + context->boxDim->getZ())
+                        )
+                {
+                    j = i;
+                    MakeVertex(j, depth[j]);
+                    j = i+1;
+                    MakeVertex(j, depth[j]);
+                    j = i+640;
+                    MakeVertex(j, depth[j]);
+
+                    j = i+1;
+                    MakeVertex(j, depth[j]);
+                    j = i+640;
+                    MakeVertex(j, depth[j]);
+                    j = i+641;
+                    MakeVertex(j, depth[j]);
+                }
+            }
+            glEnd();
+        }
+    }
+};
+
+
 int main(int argc, char **argv)
 {
     Context* context = Context::instance();
@@ -216,6 +268,7 @@ int main(int argc, char **argv)
         context->addViewport(new TrianguleCamViewPort);
         context->addViewport(new BoxCamViewPort);
     }
+    context->addViewport(new FrontCamViewPort);
 
     context->initGlLoop(argc, argv);
 
