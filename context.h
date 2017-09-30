@@ -19,6 +19,18 @@ public:
     friend class Context;
 };
 
+class ContextAction
+{
+protected:
+    Context* context;
+    char key;
+public:
+    virtual void exec() = 0;
+
+    friend class Context;
+};
+
+
 class Context
 {
     static Context *_instance;
@@ -37,6 +49,7 @@ public:
     int f;
 
     std::list<ContextViewPort*> viewports;
+    std::list<ContextAction*> actions;
 
     std::vector<uint8_t> rgb; //RGB Kinect captured
     std::vector<uint16_t> depth; //Depth Image Kinect captured
@@ -56,6 +69,8 @@ public:
 
     void addViewport(ContextViewPort*);
     void notify();
+
+    void addAction(const unsigned char k, ContextAction* action);
 
     void keyPressed(unsigned char key, int x, int y);
 };

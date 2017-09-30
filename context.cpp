@@ -106,7 +106,6 @@ void Context::addViewport(ContextViewPort* viewport)
 }
 
 
-
 void Context::notify() {
     cam->move(0.2);
 
@@ -121,6 +120,13 @@ void Context::notify() {
 
     glFlush();
     glutSwapBuffers();
+}
+
+void Context::addAction(const unsigned char key, ContextAction* action)
+{
+    action->context = this;
+    action->key = key;
+    actions.push_back(action);
 }
 
 void Context::keyPressed(unsigned char key, int x, int y)
@@ -175,5 +181,9 @@ void Context::keyPressed(unsigned char key, int x, int y)
                     freenect_angle = -30;
                 device->setTiltDegrees(freenect_angle);
                 break;
+    }
+    for (std::list<ContextAction*>::iterator it=actions.begin(); it!=actions.end(); it++) {
+        if ((*it)->key == key)
+            (*it)->exec();
     }
 }

@@ -1,32 +1,3 @@
-/*
- * This file is part of the OpenKinect Project. http://www.openkinect.org
- *
- * Copyright (c) 2010 individual OpenKinect contributors. See the CONTRIB file
- * for details.
- *
- * This code is licensed to you under the terms of the Apache License, version
- * 2.0, or, at your option, the terms of the GNU General Public License,
- * version 2.0. See the APACHE20 and GPL2 files for the text of the licenses,
- * or the following URLs:
- * http://www.apache.org/licenses/LICENSE-2.0
- * http://www.gnu.org/licenses/gpl-2.0.txt
- *
- * If you redistribute this file in source form, modified or unmodified, you
- * may:
- *   1) Leave this header intact and distribute it under the same terms,
- *      accompanying it with the APACHE20 and GPL20 files, or
- *   2) Delete the Apache 2.0 clause and accompany it with the GPL2 file, or
- *   3) Delete the GPL v2 clause and accompany it with the APACHE20 file
- * In all cases you must keep the copyright notice intact and include a copy
- * of the CONTRIB file.
- *
- * Binary distributions must follow the binary distribution requirements of
- * either License.
- */
-
-#include <cstdlib>
-#include <iostream>
-#include <vector>
 
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -37,6 +8,15 @@
 #include "context.h"
 #include "camera.h"
 #include "freenectdevice.h"
+
+#define IMAGES_DIR "rap3df_data"
+#define CSV_IMAGES_INFO "database.csv"
+
+//Region tested for context->box
+int extractBegX = 215;
+int extractEndX = 100;
+int extractBegY = 424;
+int extractEndY = 379;
 
 int minX = 640;
 int minY = 640;
@@ -104,6 +84,9 @@ public:
     }
 };
 
+/*
+ * Display cam position info
+ */
 class InfoViewPort: public ContextViewPort
 {
 public:
@@ -116,6 +99,7 @@ public:
         {
           glLoadIdentity();
 
+
           gluOrtho2D(0.0, 640, 0.0, 480);
           glMatrixMode(GL_MODELVIEW);
           glPushMatrix();
@@ -123,9 +107,11 @@ public:
               glLoadIdentity();
 
               glRasterPos2i(10, 10);
+              glColor3ub(0, 0.0, 0.0);
+
               std::string s =
-                      "Box Check" + std::to_string(minY) + 'x' + std::to_string(minX) + " | "
-                                  + std::to_string(maxY) + 'x' + std::to_string(maxX)
+                      "Box Check" + std::to_string(minX) + 'x' + std::to_string(minY) + "|"
+                                  + std::to_string(maxX) + 'x' + std::to_string(maxY)
                       + " rx" + std::to_string(context->cam->getXRot())
                       + " ry" + std::to_string(context->cam->getYRot())
                       + " rz" + std::to_string(context->cam->getZRot())
@@ -139,7 +125,6 @@ public:
               for (std::string::iterator i = s.begin(); i != s.end(); ++i)
               {
                 char c = *i;
-                glColor3d(1.0, 0.0, 0.0);
                 glutBitmapCharacter(font, c);
               }
 
@@ -153,6 +138,9 @@ public:
     }
 };
 
+/*
+ * Display stereo cam points with rgb color
+ */
 class PointCamViewPort: public ContextViewPort
 {
 public:
@@ -183,7 +171,10 @@ public:
 };
 
 
-class TrianguleCamViewPort: public ContextViewPort
+/*
+ * Display stereo cam basic region triangles
+ */
+class TriangleCamViewPort: public ContextViewPort
 {
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
@@ -238,12 +229,9 @@ public:
         std::vector<uint8_t>::iterator itRgb = rgb.begin();
         std::vector<uint16_t>::iterator itDepth = depth.begin();
 
-        int i;
-        for (int j = 0; j < 480; j++)
-            for (int k = 0; k < 640; k++)
-//        for (int i = 0; i < 480*640; ++i)
+        for (int j = 0; j < 480; j++) //Rows
+            for (int k = 0; k < 640; k++) //Cols
             {
-                i = (j * 640) + k; // 480 linhas de 640 pixels
 
                 float x = (k - 319.5f) * (*itDepth) / Context::instance()->f;
                 float y = (j - 239.5f) * (*itDepth) / Context::instance()->f;
@@ -370,6 +358,27 @@ public:
     }
 };
 
+class SaveImagesAction: public ContextAction
+{
+    void exec() {
+        std::string mkdir;
+        mkdir.append("mkdir ").append(IMAGES_DIR);
+        system(mkdir.c_str());
+
+        std::string csvFilePath;
+        csvFilePath.append(IMAGES_DIR).append("/").append(CSV_IMAGES_INFO);
+
+        std::FILE * csvFile;
+        csvFile = std::fopen(csvFilePath.c_str(),"a");
+
+        if (csvFile)
+        {
+          std::fputs("fopen example",csvFile);
+          std::fclose (csvFile);
+        }
+    }
+};
+
 int main(int argc, char **argv)
 {
     Context* context = Context::instance();
@@ -378,7 +387,7 @@ int main(int argc, char **argv)
     context->addViewport(new InfoViewPort);
     context->addViewport(new PointCamViewPort);
     {
-        context->addViewport(new TrianguleCamViewPort);
+        context->addViewport(new TriangleCamViewPort);
         context->addViewport(new BoxCamViewPort);
     }
 
@@ -387,6 +396,8 @@ int main(int argc, char **argv)
     context->addViewport(new LeftCamViewPort);
     context->addViewport(new FrontCamViewPort);
     context->addViewport(new RightCamViewPort);
+
+    context->addAction('p', new SaveImagesAction);
 
     context->initGlLoop(argc, argv);
 
