@@ -46,7 +46,6 @@ class Camera
         // Destructor
         ~Camera();
 
-        void keyPressed(unsigned char key, int x, int y);
         void mouseMoved(int x, int y);
         void mouseButtonPressed(int button, int state, int x, int y);
 

@@ -7,11 +7,16 @@
 template <class T> class Vec3;
 class FreenectDevice;
 class Camera;
+class Context;
 
 class ContextViewPort
 {
+protected:
+    Context* context;
 public:
     virtual void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) = 0;
+
+    friend class Context;
 };
 
 class Context
@@ -22,6 +27,7 @@ public:
 
     int window;
     FreenectDevice* device;
+    double freenect_angle;
     Camera* cam;
     Vec3<int>* boxPos;
     Vec3<int>* boxDim;
@@ -46,6 +52,8 @@ public:
 
     void addViewport(ContextViewPort*);
     void notify();
+
+    void keyPressed(unsigned char key, int x, int y);
 };
 
 

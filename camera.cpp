@@ -121,43 +121,6 @@ void Camera::move(double deltaTime)
     position += movement;
 }
 
-
-void Camera::keyPressed(unsigned char key, int x, int y)
-{
-    holdingForward = false;
-    holdingBackward = false;
-    holdingRightStrafe = false;
-    holdingLeftStrafe = false;
-
-    switch (key)
-    {
-            case  'Q':
-            case  'q':
-                rotateLeft();
-                break;
-            case  'e':
-            case  'E':
-                rotateRight();
-                break;
-            case 'W':
-            case 'w':
-                holdingForward = true;
-                break;
-            case 'S':
-            case 's':
-                holdingBackward = true;
-                break;
-            case 'A':
-            case 'a':
-                holdingLeftStrafe = true;
-                break;
-            case 'D':
-            case 'd':
-                holdingRightStrafe= true;
-                break;
-    }
-}
-
 void Camera::mouseButtonPressed(int button, int state, int x, int y)
 {
     if (state == GLUT_DOWN)

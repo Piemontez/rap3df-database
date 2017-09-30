@@ -30,6 +30,7 @@ Context::Context():
 
 void Context::init()
 {
+    freenect_angle = device->getState().getTiltDegs();
     device->startVideo();
     device->startDepth();
 }
@@ -82,7 +83,7 @@ void Context::initGlLoop(int argc, char **argv)
             _instance->device->stopVideo();
             exit(0);
         }
-        _instance->cam->keyPressed(key,x,y);
+        _instance->keyPressed(key,x,y);
     });
 
     glutMotionFunc([] (int x, int y) {
@@ -99,8 +100,11 @@ void Context::initGlLoop(int argc, char **argv)
 
 void Context::addViewport(ContextViewPort* viewport)
 {
+    viewport->context = this;
     viewports.push_back(viewport);
 }
+
+
 
 void Context::notify() {
     cam->move(0.2);
@@ -110,9 +114,65 @@ void Context::notify() {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it)
+    for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it) {
         (*it)->update(rgb, depth);
+    }
 
     glFlush();
     glutSwapBuffers();
+}
+
+void Context::keyPressed(unsigned char key, int x, int y)
+{
+    cam->holdingForward = false;
+    cam->holdingBackward = false;
+    cam->holdingRightStrafe = false;
+    cam->holdingLeftStrafe = false;
+
+    switch (key)
+    {
+            case  'Q':
+            case  'q':
+                cam->rotateLeft();
+                break;
+            case  'e':
+            case  'E':
+                cam->rotateRight();
+                break;
+            case 'W':
+            case 'w':
+                cam->holdingForward = true;
+                break;
+            case 'S':
+            case 's':
+                cam->holdingBackward = true;
+                break;
+            case 'A':
+            case 'a':
+                cam->holdingLeftStrafe = true;
+                break;
+            case 'D':
+            case 'd':
+                cam->holdingRightStrafe= true;
+                break;
+            case 'R':
+            case 'r':
+                freenect_angle++;
+                if (freenect_angle > 30)
+                    freenect_angle = 30;
+                device->setTiltDegrees(freenect_angle);
+                break;
+            case 'F':
+            case 'f':
+                freenect_angle = 0;
+                device->setTiltDegrees(freenect_angle);
+                break;
+            case 'V':
+            case 'v':
+                freenect_angle--;
+                if (freenect_angle < -30)
+                    freenect_angle = -30;
+                device->setTiltDegrees(freenect_angle);
+                break;
+    }
 }

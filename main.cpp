@@ -38,16 +38,6 @@
 #include "camera.h"
 #include "freenectdevice.h"
 
-Context* context;
-//FreenectDevice* device;
-//Camera* cam;
-//Vec3<int>* boxPos;
-//Vec3<int>* boxDim;
-
-//int window(0);                // Glut window identifier
-//int mWidth;
-//int mHeight;
-
 void MakeVertex(int pos, uint16_t depth) {
     float f = 595.f;
 
@@ -56,56 +46,12 @@ void MakeVertex(int pos, uint16_t depth) {
                 depth );
 }
 
-void DrawStereoCamPoints(bool triangles, std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth)
-{
-    if (triangles) {
-        glBegin(GL_TRIANGLES);
-        for (int j, i = 0; i < 480*638; ++i)
-        {
-            glColor3ub( rgb[3*i+0],    // R
-                        rgb[3*i+1],    // G
-                        rgb[3*i+2] );  // B
-
-                             // Z = d
-
-            if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
-                j = i;
-                MakeVertex(j, depth[j]);
-                j = i+1;
-                MakeVertex(j, depth[j]);
-                j = i+640;
-                MakeVertex(j, depth[j]);
-
-                j = i+1;
-                MakeVertex(j, depth[j]);
-                j = i+640;
-                MakeVertex(j, depth[j]);
-                j = i+641;
-                MakeVertex(j, depth[j]);
-            }
-
-        }
-        glEnd();
-    } else {
-        glBegin(GL_POINTS);
-        for (int i = 0; i < 480*640; ++i)
-        {
-            glColor3ub( rgb[3*i+0],    // R
-                        rgb[3*i+1],    // G
-                        rgb[3*i+2] );  // B
-
-            MakeVertex(i, depth[i]);
-        }
-        glEnd();
-    }
-}
-
 void DrawBoxForCapture()
 {
     // Draw the world coordinate frame
     //Todo: improve
-    Vec3<int>* boxPos = context->boxPos;
-    Vec3<int>* boxDim = context->boxDim;
+    Vec3<int>* boxPos = Context::instance()->boxPos;
+    Vec3<int>* boxDim = Context::instance()->boxDim;
 
     glBegin(GL_QUADS);
         glColor4f(0, 0,  1, 0.4);
@@ -187,38 +133,85 @@ class PointCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
+        glViewport(0, context->height/2, context->width/2, context->height/2);
+
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         {
-            glViewport(0, context->height/2, context->width/2, context->height/2);
-
             glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
             glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
             glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
-            DrawStereoCamPoints(false, rgb, depth);
+            glBegin(GL_POINTS);
+            for (int i = 0; i < 480*640; ++i)
+            {
+                glColor3ub( rgb[3*i+0],    // R
+                            rgb[3*i+1],    // G
+                            rgb[3*i+2] );  // B
 
-            glViewport(context->width/2, context->height/2, context->width/2, context->height/2);
-            DrawStereoCamPoints(true, rgb, depth);
-    //        DrawBoxForCapture();
+                MakeVertex(i, depth[i]);
+            }
+            glEnd();
         }
-
-        // Place the camera
-
-    //    glScalef(zoom, zoom, 1);
-
     }
 };
 
 
+class TrianguleCamViewPort: public ContextViewPort
+{
+public:
+    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+
+        glViewport(context->width/2, context->height/2, context->width/2, context->height/2);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        {
+            glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
+            glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
+            glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
+            glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
+
+            glBegin(GL_TRIANGLES);
+            for (int j, i = 0; i < 480*638; ++i)
+            {
+                glColor3ub( rgb[3*i+0],    // R
+                            rgb[3*i+1],    // G
+                            rgb[3*i+2] );  // B
+
+                                 // Z = d
+
+                if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
+                    j = i;
+                    MakeVertex(j, depth[j]);
+                    j = i+1;
+                    MakeVertex(j, depth[j]);
+                    j = i+640;
+                    MakeVertex(j, depth[j]);
+
+                    j = i+1;
+                    MakeVertex(j, depth[j]);
+                    j = i+640;
+                    MakeVertex(j, depth[j]);
+                    j = i+641;
+                    MakeVertex(j, depth[j]);
+                }
+            }
+            glEnd();
+//            DrawBoxForCapture();
+        }
+    }
+};
+
 
 int main(int argc, char **argv)
 {
-    context = Context::instance();
+    Context* context = Context::instance();
     context->init();
 
     context->addViewport(new PointCamViewPort);
+    context->addViewport(new TrianguleCamViewPort);
     context->addViewport(new InfoViewPort);
 
     context->initGlLoop(argc, argv);
