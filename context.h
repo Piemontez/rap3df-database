@@ -46,7 +46,7 @@ public:
 
     int width;
     int height;
-    int f;
+    float f;
 
     std::list<ContextViewPort*> viewports;
     std::list<ContextAction*> actions;
@@ -54,11 +54,12 @@ public:
     std::vector<uint8_t> rgb; //RGB Kinect captured
     std::vector<uint16_t> depth; //Depth Image Kinect captured
 
-    std::vector<uint8_t> rgbModified; //RGB in the BOX
-    std::vector<uint16_t> depthModified; //Depth in the BOX
+    std::vector<uint8_t> rgbInBoxXY; //RGB in the BOX
+    std::vector<uint8_t> depthImageInBoxXY; //Depth Image in the BOX
+    std::vector<uint16_t> depthInBoxXY; //Depth in the BOX
 
-    std::vector<uint8_t> rgbInBox; //RGB in the BOX
-    std::vector<uint16_t> depthInBox; //Depth in the BOX
+    std::vector<uint8_t> depthImageInBoxXYZ; //Depth Image in the BOX
+    std::vector<uint16_t> depthInBoxXYZ; //Depth in the BOX
 
 
     static Context *instance()

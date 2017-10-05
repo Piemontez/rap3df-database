@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstring>
 #include <string>
+#include <iostream>
 
 #include "utils.h"
 
@@ -95,5 +96,19 @@ void WriteBMPFile(std::vector<uint8_t> pixelVec, std::string fileName, uint32_t 
        }
 
        // close our file
+       fclose(filePtr);
+}
+
+
+void WriteFile(std::vector<uint16_t> dataVec, std::string fileName, uint32_t WIDTH, uint32_t HEIGHT)
+{
+       FILE* filePtr = fopen(fileName.c_str(), "wb");
+
+       for(int i=0; i<WIDTH*HEIGHT; i++)
+       {
+           fwrite(&dataVec[i], 1, sizeof(uint16_t), filePtr);
+       }
+       std::cout << std::endl;
+
        fclose(filePtr);
 }

@@ -12,9 +12,6 @@
 
 #include "utils.h"
 
-#define IMAGES_DIR "rap3df_data"
-#define CSV_IMAGES_INFO "database.csv"
-
 std::string uuidFolderName;
 
 //Region tested for context->box
@@ -96,8 +93,10 @@ class InfoViewPort: public ContextViewPort
 {
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+        int w = extractEndX - extractBegX;
+        int h = extractEndY - extractBegY;
 
-        glViewport(0, 0, context->width, context->height);
+        glViewport(0, context->height-30, context->width, context->height);
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -105,28 +104,20 @@ public:
           glLoadIdentity();
 
 
-          gluOrtho2D(0.0, 640, 0.0, 480);
+          gluOrtho2D(0.0, context->width, 0.0, context->height);
           glMatrixMode(GL_MODELVIEW);
+          glColor3f(0, 0.0, 0.0);
           glPushMatrix();
           {
               glLoadIdentity();
 
               glRasterPos2i(10, 10);
-              glColor3ub(0, 0.0, 0.0);
-
               std::string s =
                       "UUID " + uuidFolderName
                       + " Box Check" + std::to_string(minX) + 'x' + std::to_string(minY) + "|"
                                   + std::to_string(maxX) + 'x' + std::to_string(maxY)
-                      + " rx" + std::to_string(context->cam->getXRot())
-                      + " ry" + std::to_string(context->cam->getYRot())
-                      + " rz" + std::to_string(context->cam->getZRot())
-
-                      + " x" + std::to_string(context->cam->getXPos())
-                      + " y" + std::to_string(context->cam->getYPos())
-                      + " z" + std::to_string(context->cam->getZPos())
-
-                      + " size" + std::to_string(context->rgb.size());
+                      + " width:" + std::to_string(w)
+                      + " heigh:" + std::to_string(h);
 
               for (std::string::iterator i = s.begin(); i != s.end(); ++i)
               {
@@ -152,7 +143,7 @@ class PointCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(0, context->height/2, context->width/2, context->height/2);
+        glViewport(0, 0, context->width/2, context->height/2);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -179,14 +170,14 @@ public:
 
 
 /*
- * Display stereo cam basic region triangles
+ * Display stereo cam with basic algorithm for triangles
  */
 class TriangleCamViewPort: public ContextViewPort
 {
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(context->width/2, context->height/2, context->width/2, context->height/2);
+        glViewport(context->width/2, 0, context->width/2, context->height/2);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -229,11 +220,12 @@ class BoxExtractViewPort: public ContextViewPort
 {
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+        context->rgbInBoxXY.clear();
+        context->depthImageInBoxXY.clear();
+        context->depthInBoxXY.clear();
 
-        context->rgbModified.clear();
-        context->depthModified.clear();
-        context->rgbInBox.clear();
-        context->depthInBox.clear();
+        context->depthImageInBoxXYZ.clear();
+        context->depthInBoxXYZ.clear();
 
         std::vector<uint8_t>::iterator itRgb = rgb.begin();
         std::vector<uint16_t>::iterator itDepth = depth.begin();
@@ -241,46 +233,38 @@ public:
         for (int j = 0; j < 480; j++) //Rows
             for (int k = 0; k < 640; k++) //Cols
             {
-//                if (k >= extractBegX && k <= extractEndX
-//                 && j >= extractBegY && j <= extractEndY) {
-//                    context->rgbInBox.push_back(*itRgb++);
-//                    context->rgbInBox.push_back(*itRgb++);
-//                    context->rgbInBox.push_back(*itRgb);
-//                    itRgb--;itRgb--;
+                if (k >= extractBegX && k < extractEndX
+                 && j >= extractBegY && j < extractEndY) {
+                    context->rgbInBoxXY.push_back(*itRgb++);
+                    context->rgbInBoxXY.push_back(*itRgb++);
+                    context->rgbInBoxXY.push_back(*itRgb++);
 
-////                    context->depthInBox.push_back(*itDepth++);
-//                }
+                    context->depthImageInBoxXY.push_back((*itDepth) & 0xff);
+                    context->depthImageInBoxXY.push_back((*itDepth) >> 8);
+                    context->depthImageInBoxXY.push_back(0);
 
-                float x = (k - 319.5f) * (*itDepth) / Context::instance()->f;
-                float y = (j - 239.5f) * (*itDepth) / Context::instance()->f;
+                    context->depthInBoxXY.push_back(*itDepth);
 
-                if (x > (context->boxPos->getX() - context->boxDim->getX())
-                    && x < (context->boxPos->getX() + context->boxDim->getX())
+                    if ((*itDepth) > (context->boxPos->getZ() - context->boxDim->getZ())
+                            && (*itDepth) < (context->boxPos->getZ() + context->boxDim->getZ()))
+                    {
+                        context->depthImageInBoxXYZ.push_back((*itDepth) & 0xff);
+                        context->depthImageInBoxXYZ.push_back((*itDepth) >> 8);
+                        context->depthImageInBoxXYZ.push_back(0);
 
-                    && y > (context->boxPos->getY() - context->boxDim->getY())
-                    && y < (context->boxPos->getY() + context->boxDim->getY())
-
-                    && (*itDepth) > (context->boxPos->getZ() - context->boxDim->getZ())
-                    && (*itDepth) < (context->boxPos->getZ() + context->boxDim->getZ())
-                        )
-                {
-                    checkRegions(j, k);
-
-                    context->rgbModified.push_back(*itRgb++);
-                    context->rgbModified.push_back(*itRgb++);
-                    context->rgbModified.push_back(*itRgb++);
-
-                    context->depthModified.push_back(*itDepth++);
+                        context->depthInBoxXYZ.push_back(*itDepth);
+                    } else {
+                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthInBoxXYZ.push_back(0);
+                    }
                 } else {
-                    context->rgbModified.push_back(0);
-                    context->rgbModified.push_back(0);
-                    context->rgbModified.push_back(0);
-
-                    context->depthModified.push_back(0);
-
                     itRgb+=3;
-                    itDepth++;
                 }
+                itDepth++;
+
+//                checkRegions()
             }
     }
 };
@@ -290,27 +274,43 @@ class FrontCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(context->width/3, 0, context->width/3, context->height/3);
+        glViewport(context->width/3, context->height/2, context->width/3, context->height/3);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-            //glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-            glTranslatef( 0, 0, -500 );
+            glTranslatef( 0, -0, -500 );
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);
-            for (int i = 0; i < 480*640; ++i)
+
+            int w = extractEndX - extractBegX;
+            int h = extractEndY - extractBegY;
+            for (int i = 0; i < w*h; ++i)
             {
-                if (!context->depthModified[i]) continue;
+                if (!context->depthInBoxXYZ[i]) continue;
 
-                glColor3ub( context->rgbModified[3*i+0],    // R
-                            context->rgbModified[3*i+1],    // G
-                            context->rgbModified[3*i+2] );  // B
+                glColor4f(1/(((context->depthInBoxXYZ[i]/2) & 0xff) / 100.f),
+                          1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
+                          1/(((context->depthInBoxXYZ[i]/4) & 0xff) / 100.f),
+                          0.7f);
 
-                MakeVertex(i, context->depthModified[i]);
+                glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
+                            (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy
+                            context->depthInBoxXYZ[i] );
+
             }
+
+            glEnd();
+
+            glBegin(GL_LINES);
+                glColor3f(1, 0,  0);
+                glVertex3f(context->boxPos->getX(), context->boxPos->getY() + context->boxDim->getY(), context->boxPos->getZ() - context->boxDim->getZ());
+                glVertex3f(context->boxPos->getX(), context->boxPos->getY() - context->boxDim->getY(), context->boxPos->getZ() - context->boxDim->getZ());
+
+                glVertex3f(context->boxPos->getX() + context->boxDim->getX(), context->boxPos->getY(), context->boxPos->getZ() - context->boxDim->getZ());
+                glVertex3f(context->boxPos->getX() - context->boxDim->getX(), context->boxPos->getY(), context->boxPos->getZ() - context->boxDim->getZ());
             glEnd();
         }
     }
@@ -322,7 +322,7 @@ class LeftCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(0, 0, context->width/3, context->height/3);
+        glViewport(0, context->height/2, context->width/3, context->height/3);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -333,16 +333,29 @@ public:
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);
-            for (int i = 0; i < 480*640; ++i)
+
+            int w = extractEndX - extractBegX;
+            int h = extractEndY - extractBegY;
+            for (int i = 0; i < w*h; ++i)
             {
-                if (!context->depthModified[i]) continue;
+                if (!context->depthInBoxXYZ[i]) continue;
 
-                glColor3ub( context->rgbModified[3*i+0],    // R
-                            context->rgbModified[3*i+1],    // G
-                            context->rgbModified[3*i+2] );  // B
+                glColor4f(1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
+                          1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
+                          1/((context->depthInBoxXYZ[i] >> 8) / 50.f), 0.7f);
 
-                MakeVertex(i, context->depthModified[i]);
+                glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
+                            (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy
+                            context->depthInBoxXYZ[i] );
+
             }
+
+            glEnd();
+
+            glBegin(GL_LINES);
+                glColor3f(1, 0,  0);
+                glVertex3f(context->boxPos->getX(), context->boxPos->getY() + context->boxDim->getY(), context->boxPos->getZ() - (0.95f * context->boxDim->getZ()));
+                glVertex3f(context->boxPos->getX(), context->boxPos->getY() - context->boxDim->getY(), context->boxPos->getZ() - (0.95f * context->boxDim->getZ()));
             glEnd();
         }
     }
@@ -353,7 +366,7 @@ class RightCamViewPort: public ContextViewPort
 public:
     void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
 
-        glViewport(context->width/3*2, 0, context->width/3, context->height/3);
+        glViewport(context->width/3*2, context->height/2, context->width/3, context->height/3);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -364,37 +377,62 @@ public:
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);
-            for (int i = 0; i < 480*640; ++i)
+
+            int w = extractEndX - extractBegX;
+            int h = extractEndY - extractBegY;
+            for (int i = 0; i < w*h; ++i)
             {
-                if (!context->depthModified[i]) continue;
+                if (!context->depthInBoxXYZ[i]) continue;
 
-                glColor3ub( context->rgbModified[3*i+0],    // R
-                            context->rgbModified[3*i+1],    // G
-                            context->rgbModified[3*i+2] );  // B
+                glColor4f(1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
+                          1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
+                          1/((context->depthInBoxXYZ[i] >> 8) / 50.f), 0.7f);
 
-                MakeVertex(i, context->depthModified[i]);
+                glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
+                            (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy
+                            context->depthInBoxXYZ[i] );
+
             }
+
+            glEnd();
+
+            glBegin(GL_LINES);
+                glColor3f(1, 0,  0);
+                glVertex3f(context->boxPos->getX(), context->boxPos->getY() + context->boxDim->getY(), context->boxPos->getZ() - (0.95f * context->boxDim->getZ()));
+                glVertex3f(context->boxPos->getX(), context->boxPos->getY() - context->boxDim->getY(), context->boxPos->getZ() - (0.95f * context->boxDim->getZ()));
             glEnd();
         }
     }
 };
 
+std::string UUID() {
+    std::string uuid;
+    uuid.reserve(7);
+
+    srand (time(NULL));
+
+    const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    const size_t charmapLength = 36;
+    auto generator = [&](){ return charmap[rand()%charmapLength]; };
+
+    std::generate_n(std::back_inserter(uuid), 7, generator);
+
+    return uuid;
+}
+
 class GenerateUUIDAction: public ContextAction
 {
     void exec() {
-        srand (time(NULL));
-
-        const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        const size_t charmapLength = 36;
-        auto generator = [&](){ return charmap[rand()%charmapLength]; };
-        uuidFolderName.clear(); uuidFolderName.reserve(7);
-        std::generate_n(std::back_inserter(uuidFolderName), 7, generator);
+        uuidFolderName = UUID();
     }
 };
 
 class SaveImagesAction: public ContextAction
 {
     void exec() {
+        int w = extractEndX - extractBegX;
+        int h = extractEndY - extractBegY;
+
         std::string path;
         path.append("mkdir ").append(IMAGES_DIR);
         system(path.c_str());
@@ -411,28 +449,112 @@ class SaveImagesAction: public ContextAction
         csvFile = std::fopen(csvFilePath.c_str(),"a");
         if (csvFile)
         {
-          std::fputs((uuidFolderName+";\r\n").c_str(),csvFile);
-          std::fclose (csvFile);
+          std::string info;
 
+          info += uuidFolderName + ";";
+          info += std::to_string(w)+ ";";
+          info += std::to_string(h)+ ";";
+          info += "\r\n";
+
+          std::fputs(info.c_str(),csvFile);
+          std::fclose (csvFile);
         }
 
+        //
+        // KINECT 1
+        //
         //Save original rgb image
         path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append("original.bmp");
-        WriteBMPFile(context->rgb, path, 640, 480);
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_FILE);
+        WriteBMPFile(context->rgbInBoxXY, path, w, h);
 
-        //Save bitmap deth image.
+        //Save original bitmap deth image for view.
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_DEPTH_VIEW_FILE);
+        WriteBMPFile(context->depthImageInBoxXY, path, w, h);
 
+        //Save original bitmap deth image for view.
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_DATA_FILE);
+        WriteFile(context->depthInBoxXY, path, w, h);
 
-        //In box
+        //Save original bitmap deth image for view.
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
+        WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
+
+        //Save original bitmap deth image for view.
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_DATA_FILE);
+        WriteFile(context->depthInBoxXYZ, path, w, h);
+    }
+};
+
+class SaveTestImagesAction: public ContextAction
+{
+    void exec() {
         int w = extractEndX - extractBegX;
         int h = extractEndY - extractBegY;
 
-        //Save original rgb image
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append("box.bmp");
-        WriteBMPFile(context->rgbInBox, path, w, h);
+        std::string path;
+        path.append("mkdir ").append(IMAGES_DIR);
+        system(path.c_str());
 
+        path.clear();
+        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuidFolderName);
+        system(path.c_str());
+
+        path.clear();
+        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(TEST_DIR);
+        system(path.c_str());
+
+
+        std::string prefixFilesName = UUID();
+        std::string folderTest;
+        folderTest.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(TEST_DIR).append("/");
+
+        std::string csvFilePath;
+        csvFilePath.append(folderTest).append(CSV_IMAGES_INFO);
+
+
+        //Save csv database info
+        std::FILE * csvFile;
+        csvFile = std::fopen(csvFilePath.c_str(),"a");
+        if (csvFile)
+        {
+          std::string info;
+
+          info += prefixFilesName + ";";
+          info += std::to_string(w)+ ";";
+          info += std::to_string(h)+ ";";
+          info += "\r\n";
+
+          std::fputs(info.c_str(),csvFile);
+          std::fclose (csvFile);
+        }
+
+        //
+        // KINECT 1
+        //
+        //Save original rgb image
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_FILE);
+        WriteBMPFile(context->rgbInBoxXY, path, w, h);
+
+        //Save original bitmap deth image for view.
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DEPTH_VIEW_FILE);
+        WriteBMPFile(context->depthImageInBoxXY, path, w, h);
+
+        //Save original bitmap deth image for view.
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
+        WriteFile(context->depthInBoxXY, path, w, h);
+
+        //Save original bitmap deth image for view.
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
+        WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
+
+        //Save original bitmap deth image for view.
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
+        WriteFile(context->depthInBoxXYZ, path, w, h);
     }
 };
 
@@ -457,6 +579,7 @@ int main(int argc, char **argv)
     context->addAction('1', new GenerateUUIDAction);
 //    context->addAction('2', new CreateImagesCacheAction);
     context->addAction('3', new SaveImagesAction);
+    context->addAction('5', new SaveTestImagesAction);
 
     context->initGlLoop(argc, argv);
 
