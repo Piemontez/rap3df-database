@@ -10,6 +10,12 @@
 #include "camera.h"
 #include "freenectdevice.h"
 
+#include <libfreenect2/libfreenect2.hpp>
+#include <libfreenect2/frame_listener_impl.h>
+#include <libfreenect2/registration.h>
+#include <libfreenect2/packet_pipeline.h>
+#include <libfreenect2/logger.h>
+
 #include "utils.h"
 
 std::string uuidFolderName;
@@ -25,31 +31,22 @@ int minY = 640;
 int maxX = 0;
 int maxY = 0;
 
-void checkRegions(const int& y, const int& x) {
-    if (y > maxY) {
-        maxY = y;
-    }
-    if (y < minY) {
-        minY = y;
-    }
-    if (x > maxX) {
-        maxX = x;
-    }
-    if (x < minX) {
-        minX = x;
-    }
-}
-
-void MakeVertex(int pos, uint16_t depth) {
-    glVertex3f( (pos%640 - (640-1)/2.f) * depth / Context::instance()->f,  // X = (x - cx) * d / fx
-                (pos/640 - (480-1)/2.f) * depth / Context::instance()->f,  // Y = (y - cy) * d / fy
+#ifdef KINECT1
+void MakeVertex(int pos, float depth, int w, int h) {
+    glVertex3f( (pos%w- (w-1)/2.f) * depth / Context::instance()->f,  // X = (x - cx) * d / fx
+                (pos/w - (h-1)/2.f) * depth / Context::instance()->f,  // Y = (y - cy) * d / fy
                 depth );
 }
+#else
+void MakeVertex(float x, float y, float depth, int w, int h) {
+    glVertex3f(x-(w/2), y-(h/2), depth * 2);
+}
+#endif
 
 class BoxCamViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
 
         Vec3<int>* boxPos = Context::instance()->boxPos;
         Vec3<int>* boxDim = Context::instance()->boxDim;
@@ -92,7 +89,7 @@ public:
 class InfoViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
         int w = extractEndX - extractBegX;
         int h = extractEndY - extractBegY;
 
@@ -141,9 +138,10 @@ public:
 class PointCamViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
 
         glViewport(0, 0, context->width/2, context->height/2);
+//        glViewport(0, 0, context->width, context->height);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -151,10 +149,13 @@ public:
             glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
             glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
+//            glTranslatef( -context->cam->getXPos()-(context->width/2), -context->cam->getYPos()-(context->height/3), -context->cam->getZPos()+500 );
             glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
-            glPointSize(1.5f);
+            glPointSize(1.0f);
             glBegin(GL_POINTS);
+
+#ifdef KINECT1
             for (int i = 0; i < 480*640; ++i)
             {
                 glColor3ub( rgb[3*i+0],    // R
@@ -163,6 +164,25 @@ public:
 
                 MakeVertex(i, depth[i]);
             }
+#else
+            int w = context->depth2->width;
+            int h = context->depth2->height;
+
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x) * 4;
+
+                    if (!context->rgb2->status)
+                        glColor3ub( context->registered->data[i+2],    // R
+                                    context->registered->data[i+1],    // G
+                                    context->registered->data[i+0]);  // A
+
+                    if (!context->depth2->status && context->depth2->data[i+2] > 0)
+                        MakeVertex(x, y, context->depth2->data[i+2], w, h);
+
+                }
+#endif
             glEnd();
         }
     }
@@ -175,7 +195,7 @@ public:
 class TriangleCamViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
 
         glViewport(context->width/2, 0, context->width/2, context->height/2);
 
@@ -185,9 +205,11 @@ public:
             glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
             glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
+//            glTranslatef( -context->cam->getXPos()-(context->width/2), -context->cam->getYPos()-(context->height/3), -context->cam->getZPos()+500 );
             glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
             glBegin(GL_TRIANGLES);
+#ifdef KINECT1
             for (int j, i = 0; i < 480*638; ++i)
             {
                 if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
@@ -210,6 +232,50 @@ public:
                     MakeVertex(j, depth[j]);
                 }
             }
+#else
+            int w = context->depth2->width;
+            int h = context->depth2->height;
+            int j;
+
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x) * 4;
+
+                    if (!context->rgb2->status)
+                        glColor3ub( context->registered->data[i+2],    // R
+                                    context->registered->data[i+1],    // G
+                                    context->registered->data[i+0]);  // A
+
+                    if (!context->depth2->status)
+                    {
+                        if (context->depth2->data[i+2] > 0
+                            && context->depth2->data[i+6] > 0
+                            && context->depth2->data[i+2+(w * 4)] > 0) {
+                            j = i;
+                            MakeVertex(x, y, context->depth2->data[j+2], w, h);
+                            j = i+4;
+                            MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
+                            j = i+(w * 4);
+                            MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
+                        }
+
+                        if (context->depth2->data[i+6] > 0
+                            && context->depth2->data[i+2+(w * 4)] > 0
+                            && context->depth2->data[i+6+(w * 4)] > 0) {
+                            j = i+4;
+                            MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
+                            j = i+(w * 4);
+                            MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
+                            j = i+(w * 4)+4;
+                            MakeVertex(x+1, y+1, context->depth2->data[j+2], w, h);
+                        }
+
+                    }
+
+                }
+
+#endif
             glEnd();
         }
     }
@@ -219,14 +285,17 @@ public:
 class BoxExtractViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
         context->rgbInBoxXY.clear();
-        context->depthImageInBoxXY.clear();
-        context->depthInBoxXY.clear();
 
+        context->depthInBoxXY.clear();
         context->depthImageInBoxXYZ.clear();
         context->depthInBoxXYZ.clear();
 
+        context->irImageInBoxXYZ.clear();
+        context->irInBoxXYZ.clear();
+
+#ifdef KINECT1
         std::vector<uint8_t>::iterator itRgb = rgb.begin();
         std::vector<uint16_t>::iterator itDepth = depth.begin();
 
@@ -263,16 +332,66 @@ public:
                     itRgb+=3;
                 }
                 itDepth++;
-
-//                checkRegions()
             }
+#else
+        int w = context->depth2->width;
+        int h = context->depth2->height;
+
+        for (int y = 0; y < (h -1); ++y)
+            for (int x = 0; x < (w -1); ++x)
+            {
+
+                if ((y-(h/2)) > -context->boxDim->getY()
+                 && (y-(h/2)) < +context->boxDim->getY()
+                 && (x-(w/2)) > (context->boxPos->getX() -context->boxDim->getX())
+                 && (x-(w/2)) < (context->boxPos->getX() +context->boxDim->getX())) {
+
+                    int i = ((y * w) + x) * 4;
+
+                    context->rgbInBoxXY.push_back(context->registered->data[i+2]);
+                    context->rgbInBoxXY.push_back(context->registered->data[i+1]);
+                    context->rgbInBoxXY.push_back(context->registered->data[i+0]);
+
+                    uint16_t depth = context->depth2->data[i+2];
+                    context->depthInBoxXY.push_back(depth);
+
+                    if ((depth*2) > (context->boxPos->getZ() - context->boxDim->getZ())
+                     && (depth*2) < (context->boxPos->getZ() + context->boxDim->getZ()))
+                    {
+                        uint16_t depth = context->depth2->data[i+2];
+                        context->depthImageInBoxXYZ.push_back(depth & 0xff);
+                        context->depthImageInBoxXYZ.push_back(depth >> 8);
+                        context->depthImageInBoxXYZ.push_back(0);
+
+                        context->depthInBoxXYZ.push_back(depth);
+
+                        uint16_t ir = context->ir2->data[i+2];
+                        context->irImageInBoxXYZ.push_back(ir % 255);
+                        context->irImageInBoxXYZ.push_back(ir / 255);
+                        context->irImageInBoxXYZ.push_back(0);
+
+                        context->irInBoxXYZ.push_back(ir);
+                    } else {
+                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthInBoxXYZ.push_back(0);
+
+                        context->irImageInBoxXYZ.push_back(0);
+                        context->irImageInBoxXYZ.push_back(0);
+                        context->irImageInBoxXYZ.push_back(0);
+                        context->irInBoxXYZ.push_back(0);
+                    }
+                }
+            }
+#endif
     }
 };
 
 class FrontCamViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
 
         glViewport(context->width/3, context->height/2, context->width/3, context->height/3);
 
@@ -280,11 +399,11 @@ public:
         glLoadIdentity();
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-            glTranslatef( 0, -0, -500 );
+            glTranslatef( 0, -0, context->boxDim->getZ());
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);
-
+#ifdef KINECT1
             int w = extractEndX - extractBegX;
             int h = extractEndY - extractBegY;
             for (int i = 0; i < w*h; ++i)
@@ -301,7 +420,24 @@ public:
                             context->depthInBoxXYZ[i] );
 
             }
+#else
+            int w = context->boxDim->getX() * 2 - 1;
+            int h = context->boxDim->getY() * 2 - 1;
 
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x);
+
+                    if (!context->depthInBoxXYZ[i]) continue;
+
+                    glColor3ub( context->rgbInBoxXY[3*i+0],    // R
+                                context->rgbInBoxXY[3*i+1],    // G
+                                context->rgbInBoxXY[3*i+2]);  // B
+
+                    MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
+                }
+#endif
             glEnd();
 
             glBegin(GL_LINES);
@@ -320,7 +456,7 @@ public:
 class LeftCamViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
 
         glViewport(0, context->height/2, context->width/3, context->height/3);
 
@@ -329,11 +465,11 @@ public:
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(-90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-            glTranslatef( 500, 0, -1000 );
+            glTranslatef( context->boxPos->getX() + (context->boxDim->getX() * 2), 0, -context->boxPos->getZ() + context->boxDim->getZ() );
 
-            glPointSize(1.0f);
+            glPointSize(2.0f);
             glBegin(GL_POINTS);
-
+#ifdef KINECT1
             int w = extractEndX - extractBegX;
             int h = extractEndY - extractBegY;
             for (int i = 0; i < w*h; ++i)
@@ -349,7 +485,24 @@ public:
                             context->depthInBoxXYZ[i] );
 
             }
+#else
+            int w = context->boxDim->getX() * 2 - 1;
+            int h = context->boxDim->getY() * 2 - 1;
 
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x);
+
+                    if (!context->depthInBoxXYZ[i]) continue;
+
+                    glColor3ub( context->rgbInBoxXY[3*i+0],    // R
+                                context->rgbInBoxXY[3*i+1],    // G
+                                context->rgbInBoxXY[3*i+2]);  // A
+
+                    MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
+                }
+#endif
             glEnd();
 
             glBegin(GL_LINES);
@@ -364,7 +517,7 @@ public:
 class RightCamViewPort: public ContextViewPort
 {
 public:
-    void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) {
+    void update() {
 
         glViewport(context->width/3*2, context->height/2, context->width/3, context->height/3);
 
@@ -373,11 +526,12 @@ public:
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
             glRotatef(90, 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-            glTranslatef( -500, 0, -1000 );
+            glTranslatef( -context->boxPos->getX() - (context->boxDim->getX() * 2), 0, -context->boxPos->getZ() + context->boxDim->getZ() );
 
-            glPointSize(1.0f);
+
+            glPointSize(2.0f);
             glBegin(GL_POINTS);
-
+#ifdef KINECT1
             int w = extractEndX - extractBegX;
             int h = extractEndY - extractBegY;
             for (int i = 0; i < w*h; ++i)
@@ -393,7 +547,24 @@ public:
                             context->depthInBoxXYZ[i] );
 
             }
+#else
+            int w = context->boxDim->getX() * 2 - 1;
+            int h = context->boxDim->getY() * 2 - 1;
 
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x);
+
+                    if (!context->depthInBoxXYZ[i]) continue;
+
+                    glColor3ub( context->rgbInBoxXY[3*i+0],    // R
+                                context->rgbInBoxXY[3*i+1],    // G
+                                context->rgbInBoxXY[3*i+2]);  // A
+
+                    MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
+                }
+#endif
             glEnd();
 
             glBegin(GL_LINES);
@@ -430,8 +601,13 @@ class GenerateUUIDAction: public ContextAction
 class SaveImagesAction: public ContextAction
 {
     void exec() {
+#ifdef KINECT1
         int w = extractEndX - extractBegX;
         int h = extractEndY - extractBegY;
+#else
+        int w = context->boxDim->getX() * 2 - 1;
+        int h = context->boxDim->getY() * 2 - 1;
+#endif
 
         std::string path;
         path.append("mkdir ").append(IMAGES_DIR);
@@ -470,31 +646,38 @@ class SaveImagesAction: public ContextAction
 
         //Save original bitmap deth image for view.
         path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_DEPTH_VIEW_FILE);
-        WriteBMPFile(context->depthImageInBoxXY, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_DATA_FILE);
-        WriteFile(context->depthInBoxXY, path, w, h);
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
+        WriteBMPFile(context->irImageInBoxXYZ, path, w, h);
 
         //Save original bitmap deth image for view.
         path.clear();
         path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
         WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
 
+
+        //Save original bitmap deth image for view.
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_DATA_FILE);
+        WriteFile(context->depthInBoxXY, path, w, h);
+
+
         //Save original bitmap deth image for view.
         path.clear();
         path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_DATA_FILE);
         WriteFile(context->depthInBoxXYZ, path, w, h);
+
+        //Save original bitmap deth image for view.
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_IR_FILE);
+        WriteFile(context->irInBoxXYZ, path, w, h);
     }
 };
 
 class SaveTestImagesAction: public ContextAction
 {
     void exec() {
-        int w = extractEndX - extractBegX;
-        int h = extractEndY - extractBegY;
+        int w = context->boxDim->getX() * 2 - 1;
+        int h = context->boxDim->getY() * 2 - 1;
 
         std::string path;
         path.append("mkdir ").append(IMAGES_DIR);
@@ -541,12 +724,12 @@ class SaveTestImagesAction: public ContextAction
         WriteBMPFile(context->rgbInBoxXY, path, w, h);
 
         //Save original bitmap deth image for view.
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DEPTH_VIEW_FILE);
-        WriteBMPFile(context->depthImageInBoxXY, path, w, h);
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_IR_VIEW_FILE);
+        WriteBMPFile(context->irImageInBoxXYZ, path, w, h);
 
         //Save original bitmap deth image for view.
         path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
-        WriteFile(context->depthInBoxXY, path, w, h);
+//        WriteFile(context->depthInBoxXY, path, w, h);
 
         //Save original bitmap deth image for view.
         path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
@@ -557,6 +740,7 @@ class SaveTestImagesAction: public ContextAction
         WriteFile(context->depthInBoxXYZ, path, w, h);
     }
 };
+
 
 int main(int argc, char **argv)
 {

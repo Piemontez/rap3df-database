@@ -2,7 +2,7 @@
 #define FRENECT_DEVICE_H
 
 #include <pthread.h>
-#include <libfreenect.hpp>
+#include "libfreenect.hpp"
 #include <vector>
 
 class Mutex

@@ -5,7 +5,16 @@
 #include <vector>
 
 template <class T> class Vec3;
+#ifdef KINECT1
 class FreenectDevice;
+#else
+#include <libfreenect2/libfreenect2.hpp>
+#include <libfreenect2/frame_listener_impl.h>
+#include <libfreenect2/registration.h>
+#include <libfreenect2/packet_pipeline.h>
+#include <libfreenect2/logger.h>
+#endif
+
 class Camera;
 class Context;
 
@@ -14,7 +23,7 @@ class ContextViewPort
 protected:
     Context* context;
 public:
-    virtual void update(std::vector<uint8_t> &rgb, std::vector<uint16_t> &depth) = 0;
+    virtual void update() = 0;
 
     friend class Context;
 };
@@ -38,7 +47,7 @@ class Context
 public:
 
     int window;
-    FreenectDevice* device;
+
     double freenect_angle;
     Camera* cam;
     Vec3<int>* boxPos;
@@ -48,8 +57,8 @@ public:
     int height;
     float f;
 
-    std::list<ContextViewPort*> viewports;
-    std::list<ContextAction*> actions;
+#ifdef KINECT1
+    FreenectDevice* device;
 
     std::vector<uint8_t> rgb; //RGB Kinect captured
     std::vector<uint16_t> depth; //Depth Image Kinect captured
@@ -57,6 +66,33 @@ public:
     std::vector<uint8_t> rgbInBoxXY; //RGB in the BOX
     std::vector<uint8_t> depthImageInBoxXY; //Depth Image in the BOX
     std::vector<uint16_t> depthInBoxXY; //Depth in the BOX
+#else
+    libfreenect2::Freenect2 freenect2;
+    libfreenect2::Freenect2Device *dev = 0;
+    libfreenect2::PacketPipeline *pipeline = 0;
+
+    std::string serial;
+
+    libfreenect2::SyncMultiFrameListener* listener;
+    libfreenect2::Registration* registration;
+
+    libfreenect2::FrameMap frames;
+    libfreenect2::Frame* undistorted;
+    libfreenect2::Frame* registered;
+
+    libfreenect2::Frame *rgb2;
+    libfreenect2::Frame *ir2;
+    libfreenect2::Frame *depth2;
+
+    std::vector<uint8_t> rgbInBoxXY; //RGB in the BOX
+    std::vector<uint16_t> depthInBoxXY; //Depth in the BOX
+
+    std::vector<uint8_t> irImageInBoxXYZ; //Depth Image in the BOX
+    std::vector<uint16_t> irInBoxXYZ; //Depth Image in the BOX
+#endif
+
+    std::list<ContextViewPort*> viewports;
+    std::list<ContextAction*> actions;
 
     std::vector<uint8_t> depthImageInBoxXYZ; //Depth Image in the BOX
     std::vector<uint16_t> depthInBoxXYZ; //Depth in the BOX

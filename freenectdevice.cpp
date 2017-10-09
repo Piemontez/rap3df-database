@@ -1,4 +1,4 @@
-#include <libfreenect.hpp>
+#include "libfreenect.hpp"
 
 #include "freenectdevice.h"
 

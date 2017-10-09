@@ -6,11 +6,12 @@
 #define CSV_IMAGES_INFO "database.csv"
 
 #define KINECT_1_XY_FILE "k1_box_xy.bmp"
-#define KINECT_1_XY_DEPTH_VIEW_FILE "k1_box_xy_depth_view.bmp"
-#define KINECT_1_XY_DATA_FILE "k1_box_xy_depth.data"
-
+#define KINECT_1_XYZ_IR_VIEW_FILE "k1_box_xy_ir_view.bmp"
 #define KINECT_1_XYZ_DEPTH_VIEW_FILE "k1_box_xyz_depth_view.bmp"
+
+#define KINECT_1_XY_DATA_FILE "k1_box_xy_depth.data"
 #define KINECT_1_XYZ_DATA_FILE "k1_box_xyz_depth.data"
+#define KINECT_1_XYZ_IR_FILE "k1_box_xyz_ir.data"
 
 struct Pixel
 {

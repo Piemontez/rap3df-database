@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
     {
         csvFilePath.clear();
-        csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XY_DATA_FILE);
+        csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
 
         std::vector<uint16_t> data;
         std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");
@@ -119,8 +119,8 @@ int main(int argc, char **argv)
 
                 glColor4f(1/(((file[i]/2) & 0xff) / 100.f),
                           1/((file[i] & 0xff) / 100.f),
-                          1/(((file[i]/4) & 0xff) / 100.f),
-                          1.f);
+                          1,
+                          0.7f);
 
                 glVertex3f( (i%w- (w-1)/2.f) * file[i] / f,  // X = (x - cx) * d / fx
                             (i/w- (h-1)/2.f) * file[i] / f,  // Y = (y - cy) * d / fy

@@ -11,29 +11,83 @@
 
 Context *Context::_instance = 0;
 
-Context::Context():
-    rgb(640*480*3),
+Context::Context()
+#ifdef KINECT1
+    :rgb(640*480*3),
     depth(640*480)
+#endif;
 {
-    device = FreenectDevice::createDevice();
-
     cam = new Camera;
+
+    window = 0;
+
+#ifdef KINECT1
+    width = 640;
+    height = 480;
 
     boxPos = new Vec3<int>(0,0, 1000);
     boxDim = new Vec3<int>(150, 200, 150);
+#else
+    width = 512;
+    height = 424;
 
-    width = 640;
-    height = 480;
+    boxPos = new Vec3<int>(0,0, 150);
+    boxDim = new Vec3<int>(60, 80, 60);
+#endif;
     f = 595.f;
 
-    window = 0;
 }
 
 void Context::init()
 {
-    freenect_angle = device->getState().getTiltDegs();
+#ifdef KINECT1
+    device = FreenectDevice::createDevice();
+
     device->startVideo();
     device->startDepth();
+
+    freenect_angle = device->getState().getTiltDegs();
+#else
+    libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Debug));
+
+    serial = freenect2.getDefaultDeviceSerialNumber();
+
+    if(freenect2.enumerateDevices() == 0)
+    {
+      std::cout << "no device connected!" << std::endl;
+      return;
+    }
+
+//    pipeline = new libfreenect2::CpuPacketPipeline();
+//    pipeline = new libfreenect2::OpenGLPacketPipeline();
+//    dev = freenect2.openDevice(serial, pipeline);
+
+    dev = freenect2.openDevice(serial);
+
+    libfreenect2::Freenect2Device::Config conff;
+    conff.MaxDepth = 2;
+    dev->setConfiguration(conff);
+
+    dev->start();
+
+    int types  = 0;
+    types |= libfreenect2::Frame::Color;
+    types |= libfreenect2::Frame::Ir;
+    types |= libfreenect2::Frame::Depth;
+
+    listener = new libfreenect2::SyncMultiFrameListener(types);
+
+    dev->setColorFrameListener(listener);
+    dev->setIrAndDepthFrameListener(listener);
+
+    std::cout << "device serial: " << dev->getSerialNumber() << std::endl;
+    std::cout << "device firmware: " << dev->getFirmwareVersion() << std::endl;
+
+    registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
+
+    undistorted = new libfreenect2::Frame(width, height, 4);
+    registered = new libfreenect2::Frame(width, height, 4);
+#endif
 }
 
 void Context::initGlLoop(int argc, char **argv)
@@ -43,6 +97,8 @@ void Context::initGlLoop(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(width, height);
     glutInitWindowPosition(0, 0);
+//    glutInitWindowSize(1000, 600);
+//    glutInitWindowPosition(100, 0);
 
     window = glutCreateWindow("RAP3DF");
     glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
@@ -53,9 +109,6 @@ void Context::initGlLoop(int argc, char **argv)
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glMatrixMode(GL_PROJECTION);
-    gluPerspective(50.0, 1.0, 900.0, 11000.0);
 
     glutDisplayFunc([] () {
         _instance->notify();
@@ -72,7 +125,7 @@ void Context::initGlLoop(int argc, char **argv)
         glViewport(0, 0, width, height);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        gluPerspective(50.0, (float)width / height, 1.0, 12000.0);
+        gluPerspective(50.0, (float)width / height, 1, 5000.0);
 
 //        glMatrixMode(GL_MODELVIEW);
     });
@@ -80,8 +133,14 @@ void Context::initGlLoop(int argc, char **argv)
     glutKeyboardFunc([] (unsigned char key, int x, int y) {
         if (key == 0x1B) {// ESC
             glutDestroyWindow(_instance->window);
+
+#ifdef KINECT1
             _instance->device->stopDepth();
-            _instance->device->stopVideo();
+            _instance->device->stopVideo();       
+#else
+            _instance->dev->stop();
+            _instance->dev->close();
+#endif
             exit(0);
         }
         _instance->keyPressed(key,x,y);
@@ -109,14 +168,36 @@ void Context::addViewport(ContextViewPort* viewport)
 void Context::notify() {
     cam->move(0.2);
 
-    device->getRGB(rgb);
-    device->getDepth(depth);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it) {
-        (*it)->update(rgb, depth);
+#ifdef KINECT1
+    device->getRGB(rgb);
+    device->getDepth(depth);
+#else
+
+    if(listener->waitForNewFrame(frames, 10*1000))
+    {
+      rgb2 = frames[libfreenect2::Frame::Color];
+      ir2 = frames[libfreenect2::Frame::Ir];
+      depth2 = frames[libfreenect2::Frame::Depth];
+  /// [loop start]
+
+  /// [registration]
+      registration->apply(rgb2, depth2, undistorted, registered);
+  /// [registration]
+
+
+      for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it) {
+          (*it)->update();
+      }
+
+
+  /// [loop end]
+      listener->release(frames);
+      /** libfreenect2::this_thread::sleep_for(libfreenect2::chrono::milliseconds(100)); */
     }
+
+#endif
 
     glFlush();
     glutSwapBuffers();
@@ -162,24 +243,46 @@ void Context::keyPressed(unsigned char key, int x, int y)
             case 'd':
                 cam->holdingRightStrafe= true;
                 break;
+
+            case 'Z':
+            case 'z':
+                boxPos->addX(-1);
+                break;
+            case 'C':
+            case 'c':
+                boxPos->addX(1);
+                break;
+
             case 'R':
             case 'r':
                 freenect_angle++;
                 if (freenect_angle > 30)
                     freenect_angle = 30;
+#ifdef KINECT1
                 device->setTiltDegrees(freenect_angle);
                 break;
+#else
+
+#endif
             case 'F':
             case 'f':
                 freenect_angle = 0;
+#ifdef KINECT1
                 device->setTiltDegrees(freenect_angle);
+#else
+
+#endif
                 break;
             case 'V':
             case 'v':
                 freenect_angle--;
                 if (freenect_angle < -30)
                     freenect_angle = -30;
+#ifdef KINECT1
                 device->setTiltDegrees(freenect_angle);
+#else
+
+#endif
                 break;
     }
     for (std::list<ContextAction*>::iterator it=actions.begin(); it!=actions.end(); it++) {
