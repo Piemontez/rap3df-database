@@ -31,7 +31,10 @@ if (OPENGL_FOUND AND GLUT_FOUND)
   add_executable(rap3df-viewer main_viewer.cpp)
   add_executable(rap3df-acquisition main.cpp context.cpp freenectdevice.cpp camera.cpp utils.cpp)
 
-  target_link_libraries(rap3df-viewer freenect
+  target_link_libraries(rap3df-viewer
+
+      #freenect
+
       ${OPENGL_LIBRARIES}
       ${GLUT_LIBRARY})
 
@@ -44,9 +47,7 @@ if (OPENGL_FOUND AND GLUT_FOUND)
       ${FreeImage_LIBRARIES}
 
       ${OPENGL_LIBRARIES}
-      ${GLUT_LIBRARY}
-
-      ${OpenCV_LIBRARIES})
+      ${GLUT_LIBRARY})
 
   install(TARGETS rap3df-viewer DESTINATION bin)
   install(TARGETS rap3df-acquisition DESTINATION bin)

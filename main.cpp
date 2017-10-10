@@ -402,7 +402,7 @@ public:
         glLoadIdentity();
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-            glTranslatef( 0, -0, context->boxDim->getZ());
+            glTranslatef( 0, -0, context->boxDim->getZ() +100);
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);

@@ -30,28 +30,35 @@ int main(int argc, char **argv)
     std::vector<std::string> folders;
 
     {//load csv file
-        std::FILE * csvFile = std::fopen(csvFilePath.c_str(),"r");
-        std::vector<char> foldername;
-        char buf[2];
-        while (std::fgets(buf, sizeof buf, csvFile) != NULL)
-        {
-            if (buf[0] == '\n') {
-                foldername.clear();
-            } else if(buf[0] != ';') {
-                foldername.push_back(buf[0]);
-            } else if(buf[0] == ';') {
-                if (folders.size() == heights.size()) {
-                    folders.push_back(std::string(foldername.begin(), foldername.end()));
+        std::FILE* csvFile = std::fopen(csvFilePath.c_str(),"r");
+        if (csvFile) {
+            std::vector<char> foldername;
+            char buf[2];
+            while (std::fgets(buf, sizeof buf, csvFile) != NULL)
+            {
+                if (buf[0] == '\n') {
                     foldername.clear();
-                } else if (widths.size() == heights.size()) {
-                    widths.push_back(std::string(foldername.begin(), foldername.end()));
-                    foldername.clear();
-                } else {
-                    heights.push_back(std::string(foldername.begin(), foldername.end()));
-                    foldername.clear();
+                } else if(buf[0] != ';') {
+                    foldername.push_back(buf[0]);
+                } else if(buf[0] == ';') {
+                    if (folders.size() == heights.size()) {
+                        folders.push_back(std::string(foldername.begin(), foldername.end()));
+                        foldername.clear();
+                    } else if (widths.size() == heights.size()) {
+                        widths.push_back(std::string(foldername.begin(), foldername.end()));
+                        foldername.clear();
+                    } else {
+                        heights.push_back(std::string(foldername.begin(), foldername.end()));
+                        foldername.clear();
+                    }
                 }
             }
         }
+    }
+
+    if (!folders.size()) {
+        std::cout << "No images files found." << std::endl;
+        exit(0);
     }
 
     {//Load depth data
@@ -109,7 +116,7 @@ int main(int argc, char **argv)
         glLoadIdentity();
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-            glTranslatef( 0, -0, -100 );
+            glTranslatef( 0, -0, +10 );
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);
