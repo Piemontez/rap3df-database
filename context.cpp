@@ -15,7 +15,7 @@ Context::Context()
 #ifdef KINECT1
     :rgb(640*480*3),
     depth(640*480)
-#endif;
+#endif
 {
     cam = new Camera;
 
@@ -32,8 +32,8 @@ Context::Context()
     height = 424;
 
     boxPos = new Vec3<int>(0,0, 150);
-    boxDim = new Vec3<int>(60, 80, 60);
-#endif;
+    boxDim = new Vec3<int>(60, 60, 60);
+#endif
     f = 595.f;
 
 }

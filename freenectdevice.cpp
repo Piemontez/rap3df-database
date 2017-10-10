@@ -1,3 +1,5 @@
+#ifdef KINECT1
+
 #include "libfreenect.hpp"
 
 #include "freenectdevice.h"
@@ -61,3 +63,4 @@ FreenectDevice *FreenectDevice::createDevice()
 {
     return &freenect.createDevice<FreenectDevice>(0);
 }
+#endif

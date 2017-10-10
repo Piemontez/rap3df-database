@@ -1,3 +1,5 @@
+#ifdef KINECT1
+
 #ifndef FRENECT_DEVICE_H
 #define FRENECT_DEVICE_H
 
@@ -69,3 +71,5 @@ private:
 };
 
 #endif // FRENECT_DEVICE_H
+
+#endif

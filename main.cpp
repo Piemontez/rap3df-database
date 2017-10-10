@@ -38,8 +38,11 @@ void MakeVertex(int pos, float depth, int w, int h) {
                 depth );
 }
 #else
+
+#define depthScale 1.0f
+
 void MakeVertex(float x, float y, float depth, int w, int h) {
-    glVertex3f(x-(w/2), y-(h/2), depth * 2);
+    glVertex3f(x-(w/2), y-(h/2), depth * depthScale);
 }
 #endif
 
@@ -355,8 +358,8 @@ public:
                     uint16_t depth = context->depth2->data[i+2];
                     context->depthInBoxXY.push_back(depth);
 
-                    if ((depth*2) > (context->boxPos->getZ() - context->boxDim->getZ())
-                     && (depth*2) < (context->boxPos->getZ() + context->boxDim->getZ()))
+                    if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
+                     && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
                     {
                         uint16_t depth = context->depth2->data[i+2];
                         context->depthImageInBoxXYZ.push_back(depth & 0xff);
@@ -478,7 +481,8 @@ public:
 
                 glColor4f(1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
                           1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
-                          1/((context->depthInBoxXYZ[i] >> 8) / 50.f), 0.7f);
+                          1/((context->depthInBoxXYZ[i] >> 8) / 50.f),
+                          0.7f);
 
                 glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
                             (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy

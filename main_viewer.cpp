@@ -16,7 +16,10 @@ int window = 0;
 
 float f = 595.f;
 int filePos = 0;
+
 std::vector< std::vector<uint16_t> >files;
+std::vector<std::string> widths;
+std::vector<std::string> heights;
 
 int main(int argc, char **argv)
 {
@@ -25,48 +28,52 @@ int main(int argc, char **argv)
 
     //Carrega arquivo com arquivos
     std::vector<std::string> folders;
-    std::vector<std::string> widths;
-    std::vector<std::string> heights;
 
-    std::FILE * csvFile = std::fopen(csvFilePath.c_str(),"r");
-
-    std::vector<char> foldername;
-    char buf[2];
-    while (std::fgets(buf, sizeof buf, csvFile) != NULL)
-    {
-        if (buf[0] == '\n') {
-            foldername.clear();
-        } else if(buf[0] != ';') {
-            foldername.push_back(buf[0]);
-        } else if(buf[0] == ';') {
-            if (folders.size() == heights.size())
-                folders.push_back(std::string(foldername.begin(), foldername.end()));
-            else if (widths.size() == heights.size())
-                widths.push_back(std::string(foldername.begin(), foldername.end()));
-            else
-                heights.push_back(std::string(foldername.begin(), foldername.end()));
+    {//load csv file
+        std::FILE * csvFile = std::fopen(csvFilePath.c_str(),"r");
+        std::vector<char> foldername;
+        char buf[2];
+        while (std::fgets(buf, sizeof buf, csvFile) != NULL)
+        {
+            if (buf[0] == '\n') {
+                foldername.clear();
+            } else if(buf[0] != ';') {
+                foldername.push_back(buf[0]);
+            } else if(buf[0] == ';') {
+                if (folders.size() == heights.size()) {
+                    folders.push_back(std::string(foldername.begin(), foldername.end()));
+                    foldername.clear();
+                } else if (widths.size() == heights.size()) {
+                    widths.push_back(std::string(foldername.begin(), foldername.end()));
+                    foldername.clear();
+                } else {
+                    heights.push_back(std::string(foldername.begin(), foldername.end()));
+                    foldername.clear();
+                }
+            }
         }
     }
 
-    //Carrega depth data
-    for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
-    {
-        csvFilePath.clear();
-        csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
-
-        std::vector<uint16_t> data;
-        std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");
-        if (dataFile!=NULL)
+    {//Load depth data
+        for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
         {
+            csvFilePath.clear();
+            csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
 
-            int i = 0;
-            uint16_t info;
-            while (std::fread(&info, 1, sizeof(uint16_t), dataFile) != NULL)
+            std::vector<uint16_t> data;
+            std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");
+            if (dataFile!=NULL)
             {
-                data.push_back(info);
+
+                int i = 0;
+                uint16_t info;
+                while (std::fread(&info, 1, sizeof(uint16_t), dataFile) != 0)
+                {
+                    data.push_back(info);
+                }
+                std::cout << std::endl;
+                files.push_back(data);
             }
-            std::cout << std::endl;
-            files.push_back(data);
         }
     }
 
@@ -102,13 +109,12 @@ int main(int argc, char **argv)
         glLoadIdentity();
         {
             glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-            glTranslatef( 0, -0, -500 );
+            glTranslatef( 0, -0, -100 );
 
             glPointSize(1.0f);
             glBegin(GL_POINTS);
 
-//            int w = widths[filePos];
-//            int h = heights[filePos];
+#ifdef KINECT1
             int w = 209;
             int h = 279;
 
@@ -116,7 +122,6 @@ int main(int argc, char **argv)
             {
 
                 if (!file[i]) continue;
-
                 glColor4f(1/(((file[i]/2) & 0xff) / 100.f),
                           1/((file[i] & 0xff) / 100.f),
                           1,
@@ -125,11 +130,30 @@ int main(int argc, char **argv)
                 glVertex3f( (i%w- (w-1)/2.f) * file[i] / f,  // X = (x - cx) * d / fx
                             (i/w- (h-1)/2.f) * file[i] / f,  // Y = (y - cy) * d / fy
                             file[i] );
-
             }
 
+#else
+            int w = atoi(widths[filePos].c_str());
+            int h = atoi(heights[filePos].c_str());
+            glColor3f(1, 1, 1);
+
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x);
+
+                    if (!file[i]) continue;
+
+                    glColor3f(1-(1/(file[i] / 64.f)),
+                              (1/(file[i] / 72.f)),
+                              1);
+
+                    glVertex3f(x-(w/2), y-(h/2), file[i] * 2);
+                }
+            }
+
+#endif
             glEnd();
-        }
 
         glFlush();
         glutSwapBuffers();
