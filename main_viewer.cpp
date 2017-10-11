@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     }
 
     {//Load depth data
-        for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
+        for (std::vector<std::string>::iterator i = folders.end(); i != folders.begin(); i--)
         {
             csvFilePath.clear();
             csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
@@ -151,9 +151,9 @@ int main(int argc, char **argv)
 
                     if (!file[i]) continue;
 
-                    glColor3f(1-(1/(file[i] / 64.f)),
-                              (1/(file[i] / 72.f)),
-                              1);
+                    glColor3f(1,
+                              (1/(file[i] / 54.f))+0.3,
+                              1-(1/(file[i] / 64.f)));
 
                     glVertex3f(x-(w/2), y-(h/2), file[i] * 2);
                 }
