@@ -34,23 +34,30 @@ int main(int argc, char **argv)
         if (csvFile) {
             std::vector<char> foldername;
             char buf[2];
+            int pos = 0;
             while (std::fgets(buf, sizeof buf, csvFile) != NULL)
             {
                 if (buf[0] == '\n') {
                     foldername.clear();
+                    pos = 0;
                 } else if(buf[0] != ';') {
                     foldername.push_back(buf[0]);
                 } else if(buf[0] == ';') {
-                    if (folders.size() == heights.size()) {
+                    switch (pos) {
+                    case 0:
                         folders.push_back(std::string(foldername.begin(), foldername.end()));
                         foldername.clear();
-                    } else if (widths.size() == heights.size()) {
+                        break;
+                    case 1:
                         widths.push_back(std::string(foldername.begin(), foldername.end()));
                         foldername.clear();
-                    } else {
+                        break;
+                    case 2:
                         heights.push_back(std::string(foldername.begin(), foldername.end()));
                         foldername.clear();
+                        break;
                     }
+                    pos++;
                 }
             }
         }
