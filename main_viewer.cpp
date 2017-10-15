@@ -149,7 +149,22 @@ int main(int argc, char **argv)
 #else
             int w = atoi(widths[filePos].c_str());
             int h = atoi(heights[filePos].c_str());
-            glColor3f(1, 1, 1);
+            uint16_t min = 0, max = 0, range;
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
+                    int i = ((y * w) + x);
+                    if (!file[i]) continue;
+
+                    if (max < file[i]) {
+                        if (max == 0)
+                            min = file[i];
+                        max = file[i];
+                    }
+                    if (min > file[i])
+                        min = file[i];
+                }
+            range = 1.f/(max - min);
 
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
@@ -159,8 +174,8 @@ int main(int argc, char **argv)
                     if (!file[i]) continue;
 
                     glColor3f(1,
-                              (1/(file[i] / 54.f))+0.3,
-                              1-(1/(file[i] / 64.f)));
+                              range * (file[i] - min),
+                              1-(range * (file[i] - min)));
 
                     glVertex3f(x-(w/2), y-(h/2), file[i] * 2);
                 }
