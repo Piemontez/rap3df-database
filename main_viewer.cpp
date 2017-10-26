@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     glutInitWindowPosition(0, 0);
 
     window = glutCreateWindow("RAP3DF");
-    glClearColor(0.4f, 0.4f, 0.4f, 0.0f);
+    glClearColor(1.f, 1.0f, 1.0f, 0.0f);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_ALPHA_TEST);
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 
                     glColor3f(1,
                               range * (file[i] - min),
-                              1-(range * (file[i] - min)));
+                              0);
 
                     glVertex3f(x-(w/2), y-(h/2), file[i] * 2);
                 }
