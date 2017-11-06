@@ -14,10 +14,14 @@ int width = 640;
 int height = 480;
 int window = 0;
 
+GLfloat xv = 0.f;
+int xvOrient = 1;
+
 float f = 595.f;
 int filePos = 0;
 
 std::vector< std::vector<uint16_t> >files;
+std::vector< std::vector<uint16_t> >colorFiles;
 std::vector<std::string> widths;
 std::vector<std::string> heights;
 
@@ -69,7 +73,8 @@ int main(int argc, char **argv)
     }
 
     {//Load depth data
-        for (std::vector<std::string>::iterator i = folders.end(); i != folders.begin(); i--)
+//        for (std::vector<std::string>::iterator i = folders.end(); i != folders.begin(); i--)
+        for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); i++)
         {
             csvFilePath.clear();
             csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
@@ -88,6 +93,24 @@ int main(int argc, char **argv)
                 std::cout << std::endl;
                 files.push_back(data);
             }
+
+            /*csvFilePath.clear();
+            csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
+
+            std::vector<uint16_t> data;
+            std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");
+            if (dataFile!=NULL)
+            {
+
+                int i = 0;
+                uint16_t info;
+                while (std::fread(&info, 1, sizeof(uint16_t), dataFile) != 0)
+                {
+                    data.push_back(info);
+                }
+                std::cout << std::endl;
+                colorFiles.push_back(data);
+            }*/
         }
     }
 
@@ -113,7 +136,23 @@ int main(int argc, char **argv)
     gluPerspective(50.0, 1.0, 900.0, 11000.0);
 
     glutDisplayFunc([] () {
+#ifdef KINECT1
+            int w = 209;
+            int h = 279;
+#else
+            int w = atoi(widths[filePos].c_str());
+            int h = atoi(heights[filePos].c_str());
+#endif
+
         std::vector<uint16_t> file = files[filePos];
+
+        if (xv > (w/2)) {
+            xvOrient = -1;
+        }
+        if (xv < -(w/2)) {
+            xvOrient = 1;
+        }
+        xv += xvOrient;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -122,16 +161,14 @@ int main(int argc, char **argv)
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         {
-            glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-            glTranslatef( 0, -0, +10 );
+            glRotatef(180, 1.f, 0.f, 0.f); // Rotate our camera on the x-axis (looking up and down)
+            glTranslatef(xv*3, 0, abs((int)xv * 2));
+            glRotatef(-xv, 0.f, 1.f, 0.f);
 
             glPointSize(1.0f);
-            glBegin(GL_POINTS);
-
+//            glBegin(GL_POINTS);
+            glBegin(GL_TRIANGLES);
 #ifdef KINECT1
-            int w = 209;
-            int h = 279;
-
             for (int i = 0; i < w*h; ++i)
             {
 
@@ -147,9 +184,9 @@ int main(int argc, char **argv)
             }
 
 #else
-            int w = atoi(widths[filePos].c_str());
-            int h = atoi(heights[filePos].c_str());
-            uint16_t min = 0, max = 0, range;
+            int j;
+            uint16_t min = 0, max = 0;
+            float range;
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
@@ -164,20 +201,40 @@ int main(int argc, char **argv)
                     if (min > file[i])
                         min = file[i];
                 }
+            max *= 0.9f;
             range = 1.f/(max - min);
+//            max *= 0.9f;
 
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!file[i]) continue;
+                    glColor3f(1- range * (file[i] - min) * 3,
+                               (range * (file[i] - min)),
+                              (range * (file[i] - min) * 2));
 
-                    glColor3f(1,
-                              range * (file[i] - min),
-                              0);
+                    if (file[i] >= min && file[i+4] >= min && file[i+(w*4)] >= min
+                     && file[i] < max && file[i+4] < max && file[i+(w*4)] < max)
+                    {
+                        j = i;
+                        glVertex3f(x-(w/2), y-(h/2), file[j] * 2);
+                        j = i+4;
+                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 2);
+                        j = i+(w * 4);
+                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 2);
+                    }
+                    if (file[i+4] > min && file[i+(w*4)] > min && file[i+(w*4)+4] > min
+                     && file[i+4] < max && file[i+(w*4)] < max && file[i+(w*4)+4] < max)
+                    {
+                        j = i+4;
+                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 2);
+                        j = i+(w*4);
+                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 2);
+                        j = i+(w*4)+4;
+                        glVertex3f(x+1-(w/2), y+1-(h/2), file[j] * 2);
+                    }
 
-                    glVertex3f(x-(w/2), y-(h/2), file[i] * 2);
                 }
             }
 
@@ -224,6 +281,10 @@ int main(int argc, char **argv)
                 if (filePos >= files.size())
                     filePos = files.size() - 1;
 
+                glutPostRedisplay();
+                break;
+            case  'w':
+            case  'W':
                 glutPostRedisplay();
                 break;
         }
