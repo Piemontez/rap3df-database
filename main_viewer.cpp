@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <thread>
 
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -9,6 +10,8 @@
 #endif
 
 #include "utils.h"
+
+void foo();
 
 int width = 640;
 int height = 480;
@@ -136,13 +139,8 @@ int main(int argc, char **argv)
     gluPerspective(50.0, 1.0, 900.0, 11000.0);
 
     glutDisplayFunc([] () {
-#ifdef KINECT1
-            int w = 209;
-            int h = 279;
-#else
-            int w = atoi(widths[filePos].c_str());
-            int h = atoi(heights[filePos].c_str());
-#endif
+        int w = atoi(widths[filePos].c_str());
+        int h = atoi(heights[filePos].c_str());
 
         std::vector<uint16_t> file = files[filePos];
 
@@ -168,22 +166,7 @@ int main(int argc, char **argv)
             glPointSize(1.0f);
 //            glBegin(GL_POINTS);
             glBegin(GL_TRIANGLES);
-#ifdef KINECT1
-            for (int i = 0; i < w*h; ++i)
-            {
 
-                if (!file[i]) continue;
-                glColor4f(1/(((file[i]/2) & 0xff) / 100.f),
-                          1/((file[i] & 0xff) / 100.f),
-                          1,
-                          0.7f);
-
-                glVertex3f( (i%w- (w-1)/2.f) * file[i] / f,  // X = (x - cx) * d / fx
-                            (i/w- (h-1)/2.f) * file[i] / f,  // Y = (y - cy) * d / fy
-                            file[i] );
-            }
-
-#else
             int j;
             uint16_t min = 0, max = 0;
             float range;
@@ -201,7 +184,7 @@ int main(int argc, char **argv)
                     if (min > file[i])
                         min = file[i];
                 }
-            max *= 0.9f;
+//            max *= 0.9f;
             range = 1.f/(max - min);
 //            max *= 0.9f;
 
@@ -238,7 +221,6 @@ int main(int argc, char **argv)
                 }
             }
 
-#endif
             glEnd();
 
         glFlush();
@@ -269,6 +251,7 @@ int main(int argc, char **argv)
         {
             case  'Q':
             case  'q':
+                xv = 0.f;
                 filePos--;
                 if (filePos < 0)
                     filePos = 0;
@@ -277,6 +260,7 @@ int main(int argc, char **argv)
                 break;
             case  'e':
             case  'E':
+                xv = 0.f;
                 filePos++;
                 if (filePos >= files.size())
                     filePos = files.size() - 1;
@@ -290,5 +274,13 @@ int main(int argc, char **argv)
         }
     });
 
+    std::thread first(foo);
+    first.join();
+
     glutMainLoop();
+}
+
+void foo()
+{
+  // do stuff...
 }
