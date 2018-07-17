@@ -10,6 +10,8 @@
 #endif
 
 Context *Context::_instance = 0;
+int Context::window1 = 0;
+int Context::window2 = 0;
 
 Context::Context()
 #ifdef KINECT1
@@ -18,8 +20,6 @@ Context::Context()
 #endif
 {
     cam = new Camera;
-
-    window = 0;
 
 #ifdef KINECT1
     width = 640;
@@ -38,8 +38,14 @@ Context::Context()
 
 }
 
-void Context::init()
+void Context::init(int argc, char **argv)
 {
+    //GLUT START
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+    glutInitWindowSize(width, height);
+    glutInitWindowPosition(0, 0);
+
 #ifdef KINECT1
     device = FreenectDevice::createDevice();
 
@@ -90,17 +96,19 @@ void Context::init()
 #endif
 }
 
-void Context::initGlLoop(int argc, char **argv)
-{
-    glutInit(&argc, argv);
 
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(width, height);
-    glutInitWindowPosition(0, 0);
+int Context::initWindow(const char* title)
+{
+//    glutTimerFunc( 10, TimeEvent, 1);
 //    glutInitWindowSize(1000, 600);
 //    glutInitWindowPosition(100, 0);
 
-    window = glutCreateWindow("RAP3DF");
+    int currwindow = glutCreateWindow(title);
+    if (!Context::window1) //Todo REVER
+        Context::window1 = currwindow;
+    else if (!Context::window2) //Todo REVER
+        Context::window2 = currwindow;
+
     glClearColor(0.8f, 0.8f, 0.8f, 0.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -110,9 +118,14 @@ void Context::initGlLoop(int argc, char **argv)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glutDisplayFunc([] () {
-        _instance->notify();
-    });
+    if (Context::window2)
+        glutDisplayFunc([] (void) {
+            _instance->notify(Context::window2);
+        });
+    else if (Context::window1)
+        glutDisplayFunc([] (void) {
+            _instance->notify(Context::window1);
+        });
 
     glutIdleFunc([] () {
         glutPostRedisplay();
@@ -132,7 +145,8 @@ void Context::initGlLoop(int argc, char **argv)
 
     glutKeyboardFunc([] (unsigned char key, int x, int y) {
         if (key == 0x1B) {// ESC
-            glutDestroyWindow(_instance->window);
+            //Todo destroy windows
+//            glutDestroyWindow(_instance->window);
 
 #ifdef KINECT1
             _instance->device->stopDepth();
@@ -155,17 +169,23 @@ void Context::initGlLoop(int argc, char **argv)
         _instance->cam->mouseButtonPressed(button, state, x, y);
     });
 
+    return currwindow;
+}
+
+void Context::start()
+{
     glutMainLoop();
 }
 
-void Context::addViewport(ContextViewPort* viewport)
+void Context::addViewport(const int window, ContextViewPort* viewport)
 {
     viewport->context = this;
+    viewport->window = window;
     viewports.push_back(viewport);
 }
 
 
-void Context::notify() {
+void Context::notify(int window) {
     cam->move(0.2);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -175,24 +195,25 @@ void Context::notify() {
     device->getDepth(depth);
 #else
 
-    if(listener->waitForNewFrame(frames, 10*1000))
+    bool hasFrame = listener && listener->waitForNewFrame(frames, 10*1000);
+    if(hasFrame)
     {
       rgb2 = frames[libfreenect2::Frame::Color];
       ir2 = frames[libfreenect2::Frame::Ir];
       depth2 = frames[libfreenect2::Frame::Depth];
-  /// [loop start]
 
-  /// [registration]
       registration->apply(rgb2, depth2, undistorted, registered);
-  /// [registration]
+    }
 
 
-      for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it) {
-          (*it)->update();
-      }
+    for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it) {
+        if (window == (*it)->window)
+            (*it)->update();
+    }
 
 
-  /// [loop end]
+    if(hasFrame)
+    {
       listener->release(frames);
       /** libfreenect2::this_thread::sleep_for(libfreenect2::chrono::milliseconds(100)); */
     }

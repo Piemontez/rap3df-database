@@ -22,6 +22,7 @@ class ContextViewPort
 {
 protected:
     Context* context;
+    int window{0};
 public:
     virtual void update() = 0;
 
@@ -43,10 +44,10 @@ public:
 class Context
 {
     static Context *_instance;
+    static int window1;//TODO: REVER
+    static int window2;//TODO: REVER
     Context();
 public:
-
-    int window;
 
     double freenect_angle;
     Camera* cam;
@@ -73,16 +74,16 @@ public:
 
     std::string serial;
 
-    libfreenect2::SyncMultiFrameListener* listener;
+    libfreenect2::SyncMultiFrameListener* listener{0};
     libfreenect2::Registration* registration;
 
     libfreenect2::FrameMap frames;
     libfreenect2::Frame* undistorted;
     libfreenect2::Frame* registered;
 
-    libfreenect2::Frame *rgb2;
-    libfreenect2::Frame *ir2;
-    libfreenect2::Frame *depth2;
+    libfreenect2::Frame *rgb2{0};
+    libfreenect2::Frame *ir2{0};
+    libfreenect2::Frame *depth2{0};
 
     std::vector<uint8_t> rgbInBoxXY; //RGB in the BOX
     std::vector<uint16_t> depthInBoxXY; //Depth in the BOX
@@ -105,11 +106,12 @@ public:
         return _instance;
     }
 
-    void init();
-    void initGlLoop(int argc, char **argv);
+    void init(int argc, char **argv);
+    int initWindow(const char *title);
+    void start();
 
-    void addViewport(ContextViewPort*);
-    void notify();
+    void addViewport(const int window, ContextViewPort*);
+    void notify(int window);
 
     void addAction(const unsigned char k, ContextAction* action);
 

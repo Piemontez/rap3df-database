@@ -168,23 +168,26 @@ public:
                 MakeVertex(i, depth[i]);
             }
 #else
-            int w = context->depth2->width;
-            int h = context->depth2->height;
+            if (context->depth2)
+            {
+                int w = context->depth2->width;
+                int h = context->depth2->height;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
-                {
-                    int i = ((y * w) + x) * 4;
+                for (int y = 0; y < (h -1); ++y)
+                    for (int x = 0; x < (w -1); ++x)
+                    {
+                        int i = ((y * w) + x) * 4;
 
-                    if (!context->rgb2->status)
-                        glColor3ub( context->registered->data[i+2],    // R
-                                    context->registered->data[i+1],    // G
-                                    context->registered->data[i+0]);  // A
+                        if (!context->rgb2->status)
+                            glColor3ub( context->registered->data[i+2],    // R
+                                        context->registered->data[i+1],    // G
+                                        context->registered->data[i+0]);  // A
 
-                    if (!context->depth2->status && context->depth2->data[i+2] > 0)
-                        MakeVertex(x, y, context->depth2->data[i+2], w, h);
+                        if (!context->depth2->status && context->depth2->data[i+2] > 0)
+                            MakeVertex(x, y, context->depth2->data[i+2], w, h);
 
-                }
+                    }
+            }
 #endif
             glEnd();
         }
@@ -337,56 +340,58 @@ public:
                 itDepth++;
             }
 #else
-        int w = context->depth2->width;
-        int h = context->depth2->height;
+        if (context->depth2) {
+            int w = context->depth2->width;
+            int h = context->depth2->height;
 
-        for (int y = 0; y < (h -1); ++y)
-            for (int x = 0; x < (w -1); ++x)
-            {
+            for (int y = 0; y < (h -1); ++y)
+                for (int x = 0; x < (w -1); ++x)
+                {
 
-                if ((y-(h/2)) > -context->boxDim->getY()
-                 && (y-(h/2)) < +context->boxDim->getY()
-                 && (x-(w/2)) > (context->boxPos->getX() -context->boxDim->getX())
-                 && (x-(w/2)) < (context->boxPos->getX() +context->boxDim->getX())) {
+                    if ((y-(h/2)) > -context->boxDim->getY()
+                     && (y-(h/2)) < +context->boxDim->getY()
+                     && (x-(w/2)) > (context->boxPos->getX() -context->boxDim->getX())
+                     && (x-(w/2)) < (context->boxPos->getX() +context->boxDim->getX())) {
 
-                    int i = ((y * w) + x) * 4;
+                        int i = ((y * w) + x) * 4;
 
-                    context->rgbInBoxXY.push_back(context->registered->data[i+2]);
-                    context->rgbInBoxXY.push_back(context->registered->data[i+1]);
-                    context->rgbInBoxXY.push_back(context->registered->data[i+0]);
+                        context->rgbInBoxXY.push_back(context->registered->data[i+2]);
+                        context->rgbInBoxXY.push_back(context->registered->data[i+1]);
+                        context->rgbInBoxXY.push_back(context->registered->data[i+0]);
 
-                    uint16_t depth = context->depth2->data[i+2];
-                    context->depthInBoxXY.push_back(depth);
-
-                    if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
-                     && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
-                    {
                         uint16_t depth = context->depth2->data[i+2];
-                        context->depthImageInBoxXYZ.push_back(depth & 0xff);
-                        context->depthImageInBoxXYZ.push_back(depth >> 8);
-                        context->depthImageInBoxXYZ.push_back(0);
+                        context->depthInBoxXY.push_back(depth);
 
-                        context->depthInBoxXYZ.push_back(depth);
+                        if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
+                         && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
+                        {
+                            uint16_t depth = context->depth2->data[i+2];
+                            context->depthImageInBoxXYZ.push_back(depth & 0xff);
+                            context->depthImageInBoxXYZ.push_back(depth >> 8);
+                            context->depthImageInBoxXYZ.push_back(0);
 
-                        uint16_t ir = context->ir2->data[i+2];
-                        context->irImageInBoxXYZ.push_back(ir % 255);
-                        context->irImageInBoxXYZ.push_back(ir / 255);
-                        context->irImageInBoxXYZ.push_back(0);
+                            context->depthInBoxXYZ.push_back(depth);
 
-                        context->irInBoxXYZ.push_back(ir);
-                    } else {
-                        context->depthImageInBoxXYZ.push_back(0);
-                        context->depthImageInBoxXYZ.push_back(0);
-                        context->depthImageInBoxXYZ.push_back(0);
-                        context->depthInBoxXYZ.push_back(0);
+                            uint16_t ir = context->ir2->data[i+2];
+                            context->irImageInBoxXYZ.push_back(ir % 255);
+                            context->irImageInBoxXYZ.push_back(ir / 255);
+                            context->irImageInBoxXYZ.push_back(0);
 
-                        context->irImageInBoxXYZ.push_back(0);
-                        context->irImageInBoxXYZ.push_back(0);
-                        context->irImageInBoxXYZ.push_back(0);
-                        context->irInBoxXYZ.push_back(0);
+                            context->irInBoxXYZ.push_back(ir);
+                        } else {
+                            context->depthImageInBoxXYZ.push_back(0);
+                            context->depthImageInBoxXYZ.push_back(0);
+                            context->depthImageInBoxXYZ.push_back(0);
+                            context->depthInBoxXYZ.push_back(0);
+
+                            context->irImageInBoxXYZ.push_back(0);
+                            context->irImageInBoxXYZ.push_back(0);
+                            context->irImageInBoxXYZ.push_back(0);
+                            context->irInBoxXYZ.push_back(0);
+                        }
                     }
                 }
-            }
+        }
 #endif
     }
 };
@@ -427,19 +432,20 @@ public:
             int w = context->boxDim->getX() * 2 - 1;
             int h = context->boxDim->getY() * 2 - 1;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
-                {
-                    int i = ((y * w) + x);
+            if (context->depthInBoxXYZ.size() > (h*w))
+                for (int y = 0; y < (h -1); ++y)
+                    for (int x = 0; x < (w -1); ++x)
+                    {
+                        int i = ((y * w) + x);
 
-                    if (!context->depthInBoxXYZ[i]) continue;
+                        if (!context->depthInBoxXYZ[i]) continue;
 
-                    glColor3ub( context->rgbInBoxXY[3*i+0],    // R
-                                context->rgbInBoxXY[3*i+1],    // G
-                                context->rgbInBoxXY[3*i+2]);  // B
+                        glColor3ub( context->rgbInBoxXY[3*i+0],    // R
+                                    context->rgbInBoxXY[3*i+1],    // G
+                                    context->rgbInBoxXY[3*i+2]);  // B
 
-                    MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
-                }
+                        MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
+                    }
 #endif
             glEnd();
 
@@ -493,19 +499,20 @@ public:
             int w = context->boxDim->getX() * 2 - 1;
             int h = context->boxDim->getY() * 2 - 1;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
-                {
-                    int i = ((y * w) + x);
+            if (context->depthInBoxXYZ.size() > (h*w))
+                for (int y = 0; y < (h -1); ++y)
+                    for (int x = 0; x < (w -1); ++x)
+                    {
+                        int i = ((y * w) + x);
 
-                    if (!context->depthInBoxXYZ[i]) continue;
+                        if (!context->depthInBoxXYZ[i]) continue;
 
-                    glColor3ub( context->rgbInBoxXY[3*i+0],    // R
-                                context->rgbInBoxXY[3*i+1],    // G
-                                context->rgbInBoxXY[3*i+2]);  // A
+                        glColor3ub( context->rgbInBoxXY[3*i+0],    // R
+                                    context->rgbInBoxXY[3*i+1],    // G
+                                    context->rgbInBoxXY[3*i+2]);  // A
 
-                    MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
-                }
+                        MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
+                    }
 #endif
             glEnd();
 
@@ -555,19 +562,20 @@ public:
             int w = context->boxDim->getX() * 2 - 1;
             int h = context->boxDim->getY() * 2 - 1;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
-                {
-                    int i = ((y * w) + x);
+            if (context->depthInBoxXYZ.size() > (h*w))
+                for (int y = 0; y < (h -1); ++y)
+                    for (int x = 0; x < (w -1); ++x)
+                    {
+                        int i = ((y * w) + x);
 
-                    if (!context->depthInBoxXYZ[i]) continue;
+                        if (!context->depthInBoxXYZ[i]) continue;
 
-                    glColor3ub( context->rgbInBoxXY[3*i+0],    // R
-                                context->rgbInBoxXY[3*i+1],    // G
-                                context->rgbInBoxXY[3*i+2]);  // A
+                        glColor3ub( context->rgbInBoxXY[3*i+0],    // R
+                                    context->rgbInBoxXY[3*i+1],    // G
+                                    context->rgbInBoxXY[3*i+2]);  // A
 
-                    MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
-                }
+                        MakeVertex(x, y, context->depthInBoxXYZ[i], w, h);
+                    }
 #endif
             glEnd();
 
@@ -749,27 +757,37 @@ class SaveTestImagesAction: public ContextAction
 int main(int argc, char **argv)
 {
     Context* context = Context::instance();
-    context->init();
+    context->init(argc, argv);
 
-    context->addViewport(new InfoViewPort);
-    context->addViewport(new PointCamViewPort);
     {
-        context->addViewport(new TriangleCamViewPort);
-        context->addViewport(new BoxCamViewPort);
+        int wind= context->initWindow("Controll");
+        context->addViewport(wind, new InfoViewPort);
+        context->addViewport(wind, new PointCamViewPort);
+        {
+//            context->addViewport(wind, new TriangleCamViewPort);
+//            context->addViewport(wind, new BoxCamViewPort);
+        }
+
+        context->addViewport(wind, new BoxExtractViewPort);
+
+        context->addViewport(wind, new LeftCamViewPort);
+        context->addViewport(wind, new FrontCamViewPort);
+        context->addViewport(wind, new RightCamViewPort);
+
+        context->addAction('1', new GenerateUUIDAction);
+    //    context->addAction('2', new CreateImagesCacheAction);
+        context->addAction('3', new SaveImagesAction);
+        context->addAction('5', new SaveTestImagesAction);
+    }
+    {
+        int wind= context->initWindow("RAP3DF");
+
+        context->addViewport(wind, new LeftCamViewPort);
+        context->addViewport(wind, new FrontCamViewPort);
+        context->addViewport(wind, new RightCamViewPort);
     }
 
-    context->addViewport(new BoxExtractViewPort);
-
-    context->addViewport(new LeftCamViewPort);
-    context->addViewport(new FrontCamViewPort);
-    context->addViewport(new RightCamViewPort);
-
-    context->addAction('1', new GenerateUUIDAction);
-//    context->addAction('2', new CreateImagesCacheAction);
-    context->addAction('3', new SaveImagesAction);
-    context->addAction('5', new SaveTestImagesAction);
-
-    context->initGlLoop(argc, argv);
+    context->start();
 
     return 0;
 }
