@@ -239,48 +239,50 @@ public:
                 }
             }
 #else
-            int w = context->depth2->width;
-            int h = context->depth2->height;
-            int j;
+            if (context->depth2)
+            {
+                int w = context->depth2->width;
+                int h = context->depth2->height;
+                int j;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
-                {
-                    int i = ((y * w) + x) * 4;
-
-                    if (!context->rgb2->status)
-                        glColor3ub( context->registered->data[i+2],    // R
-                                    context->registered->data[i+1],    // G
-                                    context->registered->data[i+0]);  // A
-
-                    if (!context->depth2->status)
+                for (int y = 0; y < (h -1); ++y)
+                    for (int x = 0; x < (w -1); ++x)
                     {
-                        if (context->depth2->data[i+2] > 0
-                            && context->depth2->data[i+6] > 0
-                            && context->depth2->data[i+2+(w * 4)] > 0) {
-                            j = i;
-                            MakeVertex(x, y, context->depth2->data[j+2], w, h);
-                            j = i+4;
-                            MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
-                            j = i+(w * 4);
-                            MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
-                        }
+                        int i = ((y * w) + x) * 4;
 
-                        if (context->depth2->data[i+6] > 0
-                            && context->depth2->data[i+2+(w * 4)] > 0
-                            && context->depth2->data[i+6+(w * 4)] > 0) {
-                            j = i+4;
-                            MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
-                            j = i+(w * 4);
-                            MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
-                            j = i+(w * 4)+4;
-                            MakeVertex(x+1, y+1, context->depth2->data[j+2], w, h);
+                        if (!context->rgb2->status)
+                            glColor3ub( context->registered->data[i+2],    // R
+                                        context->registered->data[i+1],    // G
+                                        context->registered->data[i+0]);  // A
+
+                        if (!context->depth2->status)
+                        {
+                            if (context->depth2->data[i+2] > 0
+                                && context->depth2->data[i+6] > 0
+                                && context->depth2->data[i+2+(w * 4)] > 0) {
+                                j = i;
+                                MakeVertex(x, y, context->depth2->data[j+2], w, h);
+                                j = i+4;
+                                MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
+                                j = i+(w * 4);
+                                MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
+                            }
+
+                            if (context->depth2->data[i+6] > 0
+                                && context->depth2->data[i+2+(w * 4)] > 0
+                                && context->depth2->data[i+6+(w * 4)] > 0) {
+                                j = i+4;
+                                MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
+                                j = i+(w * 4);
+                                MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
+                                j = i+(w * 4)+4;
+                                MakeVertex(x+1, y+1, context->depth2->data[j+2], w, h);
+                            }
+
                         }
 
                     }
-
-                }
-
+            }
 #endif
             glEnd();
         }
@@ -764,8 +766,8 @@ int main(int argc, char **argv)
         context->addViewport(wind, new InfoViewPort);
         context->addViewport(wind, new PointCamViewPort);
         {
-//            context->addViewport(wind, new TriangleCamViewPort);
-//            context->addViewport(wind, new BoxCamViewPort);
+            context->addViewport(wind, new TriangleCamViewPort);
+            context->addViewport(wind, new BoxCamViewPort);
         }
 
         context->addViewport(wind, new BoxExtractViewPort);
@@ -782,9 +784,10 @@ int main(int argc, char **argv)
     {
         int wind= context->initWindow("RAP3DF");
 
-        context->addViewport(wind, new LeftCamViewPort);
-        context->addViewport(wind, new FrontCamViewPort);
-        context->addViewport(wind, new RightCamViewPort);
+        new LeftCamViewPort(2);
+        context->addViewport(wind, new LeftCamViewPort(2));
+        context->addViewport(wind, new FrontCamViewPort(2));
+        context->addViewport(wind, new RightCamViewPort(2));
     }
 
     context->start();

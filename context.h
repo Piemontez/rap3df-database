@@ -23,7 +23,9 @@ class ContextViewPort
 protected:
     Context* context;
     int window{0};
+    int flags;
 public:
+    ContextViewPort(int _flags = 0);
     virtual void update() = 0;
 
     friend class Context;

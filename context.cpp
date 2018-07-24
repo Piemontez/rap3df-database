@@ -13,6 +13,11 @@ Context *Context::_instance = 0;
 int Context::window1 = 0;
 int Context::window2 = 0;
 
+ContextViewPort::ContextViewPort(int _flags): flags(_flags)
+{
+
+}
+
 Context::Context()
 #ifdef KINECT1
     :rgb(640*480*3),
@@ -121,15 +126,17 @@ int Context::initWindow(const char* title)
     if (Context::window2)
         glutDisplayFunc([] (void) {
             _instance->notify(Context::window2);
+            glutPostRedisplay();
         });
     else if (Context::window1)
         glutDisplayFunc([] (void) {
             _instance->notify(Context::window1);
+            glutPostRedisplay();
         });
 
-    glutIdleFunc([] () {
-        glutPostRedisplay();
-    });
+//    glutIdleFunc([] () {
+//        glutPostRedisplay();
+//    });
 
     glutReshapeFunc([] (int width, int height) {
         _instance->width = width;
@@ -311,3 +318,4 @@ void Context::keyPressed(unsigned char key, int x, int y)
             (*it)->exec();
     }
 }
+
