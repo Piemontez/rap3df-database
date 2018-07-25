@@ -22,11 +22,16 @@ std::string UUID() {
 
 
 void GenerateUUIDAction::exec() {
-    this->context->uuidFolderName = UUID();
+    this->context->uuid = UUID();
 }
 
 void CreateImagesCacheAction::exec() {
-    this->context->uuidFolderName = UUID();
+    context->curr_rgbImageXY = context->rgbImageXY;
+    context->curr_irImageXYZ = context->irImageXYZ;
+    context->curr_depthImageXYZ = context->depthImageXYZ;
+    context->curr_depthXY = context->depthXY;
+    context->curr_depthXYZ = context->depthXYZ;
+    context->curr_irXYZ = context->irXYZ;
 }
 
 void SaveImagesAction::exec() {
@@ -43,7 +48,7 @@ void SaveImagesAction::exec() {
     system(path.c_str());
 
     path.clear();
-    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuidFolderName);
+    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuid);
     system(path.c_str());
 
     std::string csvFilePath;
@@ -56,7 +61,7 @@ void SaveImagesAction::exec() {
     {
         std::string info;
 
-        info += this->context->uuidFolderName + ";";
+        info += this->context->uuid + ";";
         info += std::to_string(w)+ ";";
         info += std::to_string(h)+ ";";
         info += "\r\n";
@@ -70,35 +75,35 @@ void SaveImagesAction::exec() {
     //
     //Save original rgb image
     path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(KINECT_1_XY_FILE);
-    WriteBMPFile(context->rgbInBoxXY, path, w, h);
+    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_FILE);
+    WriteBMPFile(context->curr_rgbImageXY, path, w, h);
 
     //Save original bitmap deth image for view.
     path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
-    WriteBMPFile(context->irImageInBoxXYZ, path, w, h);
+    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
+    WriteBMPFile(context->curr_irImageXYZ, path, w, h);
 
     //Save original bitmap deth image for view.
     path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-    WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
-
-
-    //Save original bitmap deth image for view.
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(KINECT_1_XY_DATA_FILE);
-    WriteFile(context->depthInBoxXY, path, w, h);
+    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
+    WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
 
 
     //Save original bitmap deth image for view.
     path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(KINECT_1_XYZ_DATA_FILE);
-    WriteFile(context->depthInBoxXYZ, path, w, h);
+    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_DATA_FILE);
+    WriteFile(context->curr_depthXY, path, w, h);
+
 
     //Save original bitmap deth image for view.
     path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(KINECT_1_XYZ_IR_FILE);
-    WriteFile(context->irInBoxXYZ, path, w, h);
+    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DATA_FILE);
+    WriteFile(context->curr_depthXYZ, path, w, h);
+
+    //Save original bitmap deth image for view.
+    path.clear();
+    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_FILE);
+    WriteFile(context->curr_irXYZ, path, w, h);
 }
 
 void SaveTestImagesAction::exec() {
@@ -110,17 +115,17 @@ void SaveTestImagesAction::exec() {
     system(path.c_str());
 
     path.clear();
-    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuidFolderName);
+    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuid);
     system(path.c_str());
 
     path.clear();
-    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(TEST_DIR);
+    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(TEST_DIR);
     system(path.c_str());
 
 
     std::string prefixFilesName = UUID();
     std::string folderTest;
-    folderTest.append(IMAGES_DIR).append("/").append(this->context->uuidFolderName).append("/").append(TEST_DIR).append("/");
+    folderTest.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(TEST_DIR).append("/");
 
     std::string csvFilePath;
     csvFilePath.append(folderTest).append(CSV_IMAGES_INFO);
@@ -147,11 +152,11 @@ void SaveTestImagesAction::exec() {
     //
     //Save original rgb image
     path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_FILE);
-    WriteBMPFile(context->rgbInBoxXY, path, w, h);
+    WriteBMPFile(context->curr_rgbImageXY, path, w, h);
 
     //Save original bitmap deth image for view.
     path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_IR_VIEW_FILE);
-    WriteBMPFile(context->irImageInBoxXYZ, path, w, h);
+    WriteBMPFile(context->curr_irImageXYZ, path, w, h);
 
     //Save original bitmap deth image for view.
     path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
@@ -159,9 +164,9 @@ void SaveTestImagesAction::exec() {
 
     //Save original bitmap deth image for view.
     path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-    WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
+    WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
 
     //Save original bitmap deth image for view.
     path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
-    WriteFile(context->depthInBoxXYZ, path, w, h);
+    WriteFile(context->curr_depthXYZ, path, w, h);
 }

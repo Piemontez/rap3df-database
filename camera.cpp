@@ -29,7 +29,7 @@ void Camera::initCamera()
     rotation.addX(180);
 
     // How fast we move (higher values mean we move and strafe faster)
-    movementSpeedFactor = 100.0;
+    movementSpeedFactor = 12.5;
 
     pitchSensitivity = 0.2; // How sensitive mouse movements affect looking up and down
     yawSensitivity   = 0.2; // How sensitive mouse movements affect looking left and right

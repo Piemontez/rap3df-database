@@ -2,4 +2,6 @@ CMakeCache.txt
 CMakeFiles/
 Makefile
 cmake_install.cmake
-
+rap3df-acquisition
+rap3df-viewer
+CMakeLists.txt.*

@@ -33,8 +33,8 @@ Context::Context()
     boxPos = new Vec3<int>(0,0, 1000);
     boxDim = new Vec3<int>(150, 200, 150);
 #else
-    width = 512;
-    height = 424;
+    width = 640;
+    height = 480;
 
     boxPos = new Vec3<int>(0,0, 90);
     boxDim = new Vec3<int>(60, 75, 60);
