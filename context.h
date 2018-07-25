@@ -39,7 +39,7 @@ protected:
     Context* context;
     char key;
 public:
-    virtual void exec() = 0;
+    virtual void exec(char key) = 0;
 
     friend class Context;
 };
@@ -55,8 +55,7 @@ public:
     std::string uuid;
     int step{0};
     int imagesSaved{0};
-    int currTaked{0};
-
+    int currImageType{0};
 
     double freenect_angle;
     Camera* cam;
@@ -132,6 +131,7 @@ public:
 
     void addAction(const unsigned char k, ContextAction* action);
 
+    void keyPressed(int key, int x, int y);
     void keyPressed(unsigned char key, int x, int y);
 };
 

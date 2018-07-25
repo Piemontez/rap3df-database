@@ -94,8 +94,8 @@ void InfoViewPort::update() {
                 s += " Liberado para coletar novos dados. Type 1: start";
             }
             if (this->context->step == 1) {
-                if (this->context->currTaked == 0) {
-                    s += " Defina o tipo de imagem. Type f";
+                if (this->context->currImageType == 0) {
+                    s += " Defina o tipo de imagem. Type [f,t,d,l,r,b]";
                 } else {
                     s += (context->curr_rgbImageXY.size() ? " Com imagens." : " Sem imagens.");
                     s += " Type 2: capture images";
@@ -110,12 +110,12 @@ void InfoViewPort::update() {
 
             glRasterPos2i(5, 0);
             s = "Images:";
-            s += ((this->context->imagesSaved & 1 > 0) ? " F " : " - "); //Front
-            s += ((this->context->imagesSaved & 1 > 0) ? " L " : " - "); //Left
-            s += ((this->context->imagesSaved & 1 > 0) ? " R " : " - "); //Right
-            s += ((this->context->imagesSaved & 1 > 0) ? " T " : " - "); //Top
-            s += ((this->context->imagesSaved & 1 > 0) ? " D " : " - "); //Down
-            s += ((this->context->imagesSaved & 1 > 0) ? " B " : " - "); //Pocket Lighter
+            s += ((this->context->currImageType & 1)  ? " X " : (this->context->imagesSaved & 1 > 0) ? " F " : " - "); //Front
+            s += ((this->context->currImageType & 2) ? " X " : (this->context->imagesSaved & 2 > 0) ? " T " : " - "); //Top
+            s += ((this->context->currImageType & 4) ? " X " : (this->context->imagesSaved & 4 > 0) ? " D " : " - "); //Down
+            s += ((this->context->currImageType & 8)  ? " X " : (this->context->imagesSaved & 8 > 0) ? " L " : " - "); //Left
+            s += ((this->context->currImageType & 16) ? " X " : (this->context->imagesSaved & 16 > 0) ? " R " : " - "); //Right
+            s += ((this->context->currImageType & 32) ? " X " : (this->context->imagesSaved & 32 > 0) ? " B " : " - "); //Pocket Lighter
             s += " Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ());
             s += " CamDepth:" + std::to_string(this->context->boxPos->getZ());
             for (std::string::iterator i = s.begin(); i != s.end(); ++i)

@@ -14,6 +14,13 @@ int main(int argc, char **argv)
     context->addAction('9', new SaveTestImagesAction);
     context->addAction('0', new EnableNewDataCollectionAction);
 
+    context->addAction('f', new SetImageTypeAction);
+    context->addAction('t', new SetImageTypeAction);
+    context->addAction('d', new SetImageTypeAction);
+    context->addAction('l', new SetImageTypeAction);
+    context->addAction('r', new SetImageTypeAction);
+    context->addAction('b', new SetImageTypeAction);
+
     {
         int wind= context->initWindow("Controll");
         context->addViewport(wind, new InfoViewPort);

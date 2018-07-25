@@ -150,6 +150,12 @@ int Context::initWindow(const char* title)
 //        glMatrixMode(GL_MODELVIEW);
     });
 
+    glutSpecialFunc([] (int key, int x, int y) {
+        std::cout << key <<  " " << x << " " << y << std::endl;
+
+        _instance->keyPressed(key,x,y);
+    });
+
     glutKeyboardFunc([] (unsigned char key, int x, int y) {
         if (key == 0x1B) {// ESC
             //Todo destroy windows
@@ -164,6 +170,7 @@ int Context::initWindow(const char* title)
 #endif
             exit(0);
         }
+
         _instance->keyPressed(key,x,y);
     });
 
@@ -238,10 +245,8 @@ void Context::addAction(const unsigned char key, ContextAction* action)
     actions.push_back(action);
 }
 
-void Context::keyPressed(unsigned char key, int x, int y)
+void Context::keyPressed(int key, int x, int y)
 {
-    std::cout << key << std::endl;
-
     cam->holdingForward = false;
     cam->holdingBackward = false;
     cam->holdingRightStrafe = false;
@@ -249,75 +254,78 @@ void Context::keyPressed(unsigned char key, int x, int y)
 
     switch (key)
     {
-            case  'Q':
-            case  'q':
+            case  106:
                 cam->rotateLeft();
                 break;
-            case  'e':
-            case  'E':
+            case  104:
                 cam->rotateRight();
                 break;
-            case 'W':
-            case 'w':
+
+            case 101:
                 cam->holdingForward = true;
                 break;
-            case 'S':
-            case 's':
+            case 103:
                 cam->holdingBackward = true;
                 break;
-            case 'A':
-            case 'a':
-                cam->holdingLeftStrafe = true;
-                break;
-            case 'D':
-            case 'd':
+            case 102:
                 cam->holdingRightStrafe= true;
                 break;
+            case 100:
+                cam->holdingLeftStrafe = true;
+                break;
 
-            case 'Z':
-            case 'z':
+            case 107:
                 boxPos->addX(-1);
                 break;
-            case 'C':
-            case 'c':
+            case 105:
                 boxPos->addX(1);
                 break;
 
-            case 'R':
-            case 'r':
-                freenect_angle++;
-                if (freenect_angle > 30)
-                    freenect_angle = 30;
-#ifdef KINECT1
-                device->setTiltDegrees(freenect_angle);
-                break;
-#else
+//                case 'R':
+//                case 'r':
+//                    freenect_angle++;
+//                    if (freenect_angle > 30)
+//                        freenect_angle = 30;
+//            #ifdef KINECT1
+//                    device->setTiltDegrees(freenect_angle);
+//                    break;
+//            #else
 
-#endif
-            case 'F':
-            case 'f':
-                freenect_angle = 0;
-#ifdef KINECT1
-                device->setTiltDegrees(freenect_angle);
-#else
+//            #endif
+//                case 'F':
+//                case 'f':
+//                    freenect_angle = 0;
+//            #ifdef KINECT1
+//                    device->setTiltDegrees(freenect_angle);
+//            #else
 
-#endif
-                break;
-            case 'V':
-            case 'v':
-                freenect_angle--;
-                if (freenect_angle < -30)
-                    freenect_angle = -30;
-#ifdef KINECT1
-                device->setTiltDegrees(freenect_angle);
-#else
+//            #endif
+//                    break;
+//                case 'V':
+//                case 'v':
+//                    freenect_angle--;
+//                    if (freenect_angle < -30)
+//                        freenect_angle = -30;
+//            #ifdef KINECT1
+//                    device->setTiltDegrees(freenect_angle);
+//            #else
 
-#endif
-                break;
+//            #endif
+//                    break;
+
     }
+}
+
+void Context::keyPressed(unsigned char key, int x, int y)
+{
+    cam->holdingForward = false;
+    cam->holdingBackward = false;
+    cam->holdingRightStrafe = false;
+    cam->holdingLeftStrafe = false;
+
     for (std::list<ContextAction*>::iterator it=actions.begin(); it!=actions.end(); it++) {
         if ((*it)->key == key)
-            (*it)->exec();
+            (*it)->exec(key);
     }
 }
 

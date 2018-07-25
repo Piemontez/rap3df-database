@@ -21,14 +21,14 @@ std::string UUID() {
 }
 
 
-void GenerateUUIDAction::exec() {
+void GenerateUUIDAction::exec(char key) {
     if (!this->context->step || this->context->step == -1) {
         this->context->step = 1;
         this->context->uuid = UUID();
     }
 }
 
-void CreateImagesCacheAction::exec() {
+void CreateImagesCacheAction::exec(char key) {
     if (context->rgbImageXY.size()) {
         this->context->step = 2;
 
@@ -42,7 +42,7 @@ void CreateImagesCacheAction::exec() {
         this->context->step = 1;
 }
 
-void SaveImagesAction::exec() {
+void SaveImagesAction::exec(char key) {
 #ifdef KINECT1
     int w = extractEndX - extractBegX;
     int h = extractEndY - extractBegY;
@@ -126,7 +126,7 @@ void SaveImagesAction::exec() {
     }
 }
 
-void SaveTestImagesAction::exec() {
+void SaveTestImagesAction::exec(char key) {
     int w = context->boxDim->getX() * 2 - 1;
     int h = context->boxDim->getY() * 2 - 1;
 
@@ -201,7 +201,34 @@ void SaveTestImagesAction::exec() {
     }
 }
 
-void EnableNewDataCollectionAction::exec()
+void SetImageTypeAction::exec(char key)
+{
+    switch (key)
+    {
+        case 'f':
+            this->context->currImageType = 1;
+            break;
+        case 't':
+            this->context->currImageType = 2;
+            break;
+        case 'd':
+            this->context->currImageType = 4;
+            break;
+        case 'l':
+            this->context->currImageType = 8;
+            break;
+        case 'r':
+            this->context->currImageType = 16;
+            break;
+        case 'b':
+            this->context->currImageType = 32;
+            break;
+    }
+}
+
+void EnableNewDataCollectionAction::exec(char key)
 {
     this->context->step = -1;
+    this->context->currImageType = 0;
 }
+
