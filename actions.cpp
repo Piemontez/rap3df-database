@@ -82,36 +82,48 @@ void SaveImagesAction::exec() {
     // KINECT 1
     //
     //Save original rgb image
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_FILE);
-    WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+    if (context->curr_rgbImageXY.size()) {
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_FILE);
+        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+    }
 
     //Save original bitmap deth image for view.
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
-    WriteBMPFile(context->curr_irImageXYZ, path, w, h);
+    if (context->curr_irImageXYZ.size()) {
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
+        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
+    }
 
     //Save original bitmap deth image for view.
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-    WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
-
-
-    //Save original bitmap deth image for view.
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_DATA_FILE);
-    WriteFile(context->curr_depthXY, path, w, h);
+    if (context->curr_depthImageXYZ.size()) {
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
+        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
+    }
 
 
     //Save original bitmap deth image for view.
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DATA_FILE);
-    WriteFile(context->curr_depthXYZ, path, w, h);
+    if (context->curr_depthXY.size()) {
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_DATA_FILE);
+        WriteFile(context->curr_depthXY, path, w, h);
+    }
+
 
     //Save original bitmap deth image for view.
-    path.clear();
-    path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_FILE);
-    WriteFile(context->curr_irXYZ, path, w, h);
+    if (context->curr_depthXYZ.size()) {
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DATA_FILE);
+        WriteFile(context->curr_depthXYZ, path, w, h);
+    }
+
+    //Save original bitmap deth image for view.
+    if (context->curr_irXYZ.size()) {
+        path.clear();
+        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_FILE);
+        WriteFile(context->curr_irXYZ, path, w, h);
+    }
 }
 
 void SaveTestImagesAction::exec() {
@@ -159,24 +171,34 @@ void SaveTestImagesAction::exec() {
     // KINECT 1
     //
     //Save original rgb image
-    path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_FILE);
-    WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+    if (context->curr_rgbImageXY.size()) {
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_FILE);
+        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+    }
 
     //Save original bitmap deth image for view.
-    path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_IR_VIEW_FILE);
-    WriteBMPFile(context->curr_irImageXYZ, path, w, h);
+    if (context->curr_irImageXYZ.size()) {
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_IR_VIEW_FILE);
+        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
+    }
 
     //Save original bitmap deth image for view.
-    path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
-    //        WriteFile(context->depthInBoxXY, path, w, h);
+    if (context->curr_depthXY.size()) {
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
+        WriteFile(context->curr_depthXY, path, w, h);
+    }
 
     //Save original bitmap deth image for view.
-    path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-    WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
+    if (context->curr_depthImageXYZ.size()) {
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
+        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
+    }
 
     //Save original bitmap deth image for view.
-    path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
-    WriteFile(context->curr_depthXYZ, path, w, h);
+    if (context->curr_depthXYZ.size()) {
+        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
+        WriteFile(context->curr_depthXYZ, path, w, h);
+    }
 }
 
 void EnableNewDataCollectionAction::exec()
