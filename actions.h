@@ -23,4 +23,8 @@ class SaveTestImagesAction: public ContextAction
     void exec();
 };
 
+class EnableNewDataCollectionAction: public ContextAction
+{
+    void exec();
+};
 #endif // ACTIONS_H

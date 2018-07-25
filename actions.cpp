@@ -22,16 +22,24 @@ std::string UUID() {
 
 
 void GenerateUUIDAction::exec() {
-    this->context->uuid = UUID();
+    if (!this->context->step || this->context->step == -1) {
+        this->context->step = 1;
+        this->context->uuid = UUID();
+    }
 }
 
 void CreateImagesCacheAction::exec() {
-    context->curr_rgbImageXY = context->rgbImageXY;
-    context->curr_irImageXYZ = context->irImageXYZ;
-    context->curr_depthImageXYZ = context->depthImageXYZ;
-    context->curr_depthXY = context->depthXY;
-    context->curr_depthXYZ = context->depthXYZ;
-    context->curr_irXYZ = context->irXYZ;
+    if (context->rgbImageXY.size()) {
+        this->context->step = 2;
+
+        context->curr_rgbImageXY = context->rgbImageXY;
+        context->curr_irImageXYZ = context->irImageXYZ;
+        context->curr_depthImageXYZ = context->depthImageXYZ;
+        context->curr_depthXY = context->depthXY;
+        context->curr_depthXYZ = context->depthXYZ;
+        context->curr_irXYZ = context->irXYZ;
+    } else
+        this->context->step = 1;
 }
 
 void SaveImagesAction::exec() {
@@ -169,4 +177,9 @@ void SaveTestImagesAction::exec() {
     //Save original bitmap deth image for view.
     path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
     WriteFile(context->curr_depthXYZ, path, w, h);
+}
+
+void EnableNewDataCollectionAction::exec()
+{
+    this->context->step = -1;
 }

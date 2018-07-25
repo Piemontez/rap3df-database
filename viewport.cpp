@@ -83,11 +83,23 @@ void InfoViewPort::update() {
             glLoadIdentity();
 
             glRasterPos2i(10, 10);
-            std::string s =
-                    "UUID:" + this->context->uuid
-                    + (context->curr_rgbImageXY.size() ? " OK" : " N'")
-                    + " Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ())
-                    + " CamDepth:" + std::to_string(this->context->boxPos->getZ());
+            std::string s;
+            if (this->context->step == 0) {
+                s = "Type 1: Start.";
+            }
+            if (this->context->step != 0) {
+                s = "UUID:" + this->context->uuid;
+            }
+            if (this->context->step == -1) {
+                s += " Liberado para coletar novos dados. Type 1: start";
+            }
+            if (this->context->step == 1) {
+                s += (context->curr_rgbImageXY.size() ? " Com imagens." : " Sem imagens.");
+                s += " Type 2: capture images";
+            }
+//            s =
+//                    + " Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ())
+//                    + " CamDepth:" + std::to_string(this->context->boxPos->getZ());
 
             for (std::string::iterator i = s.begin(); i != s.end(); ++i)
             {

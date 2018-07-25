@@ -52,6 +52,9 @@ class Context
     static int window2;//TODO: REVER    
     Context();
 public:
+    std::string uuid;
+    int step{0};
+
 
     double freenect_angle;
     Camera* cam;
@@ -61,8 +64,6 @@ public:
     int width;
     int height;
     float f;
-
-    std::string uuid;
 
 #ifdef KINECT1
     FreenectDevice* device;
