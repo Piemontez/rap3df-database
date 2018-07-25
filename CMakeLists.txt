@@ -34,7 +34,7 @@ if (OPENGL_FOUND AND GLUT_FOUND)
   include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${freenect2_INCLUDE_DIR})
 
   add_executable(rap3df-viewer main_viewer.cpp)
-  add_executable(rap3df-acquisition main.cpp context.cpp actions.cpp freenectdevice.cpp camera.cpp utils.cpp)
+  add_executable(rap3df-acquisition main.cpp context.cpp actions.cpp freenectdevice.cpp camera.cpp utils.cpp viewport.cpp)
 
   target_link_libraries(rap3df-viewer
 
