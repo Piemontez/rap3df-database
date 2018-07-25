@@ -17,6 +17,7 @@ class FreenectDevice;
 
 class Camera;
 class Context;
+class ContextAction;
 
 class ContextViewPort
 {
@@ -25,10 +26,11 @@ protected:
     int window{0};
     int flags;
 public:
-    ContextViewPort(int _flags = 0);
+    explicit ContextViewPort(int _flags = 0);
     virtual void update() = 0;
 
     friend class Context;
+    friend class ContextAction;
 };
 
 class ContextAction
@@ -47,7 +49,7 @@ class Context
 {
     static Context *_instance;
     static int window1;//TODO: REVER
-    static int window2;//TODO: REVER
+    static int window2;//TODO: REVER    
     Context();
 public:
 
@@ -59,6 +61,8 @@ public:
     int width;
     int height;
     float f;
+
+    std::string uuidFolderName;
 
 #ifdef KINECT1
     FreenectDevice* device;

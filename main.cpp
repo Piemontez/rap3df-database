@@ -9,16 +9,14 @@
 #include "context.h"
 #include "camera.h"
 #include "freenectdevice.h"
+#include "actions.h"
+#include "utils.h"
 
 #include <libfreenect2/libfreenect2.hpp>
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/registration.h>
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
-
-#include "utils.h"
-
-std::string uuidFolderName;
 
 //Region tested for context->box
 int extractBegX = 215;
@@ -113,7 +111,7 @@ public:
 
               glRasterPos2i(10, 10);
               std::string s =
-                      "UUID " + uuidFolderName
+                      "UUID " + this->context->uuidFolderName
                       + " Box Check" + std::to_string(minX) + 'x' + std::to_string(minY) + "|"
                                   + std::to_string(maxX) + 'x' + std::to_string(maxY)
                       + " width:" + std::to_string(w)
@@ -401,9 +399,13 @@ public:
 class FrontCamViewPort: public ContextViewPort
 {
 public:
+    explicit FrontCamViewPort(int _flags): ContextViewPort(_flags) {}
     void update() {
 
-        glViewport(context->width/3, context->height/2, context->width/3, context->height/3);
+        if (flags == 1)
+            glViewport(context->width/3, context->height/2, context->width/3, context->height/3);
+        if (flags == 2)
+            glViewport(context->width/3, 0, context->width/3, context->height);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -467,9 +469,14 @@ public:
 class LeftCamViewPort: public ContextViewPort
 {
 public:
+    explicit LeftCamViewPort(int _flags): ContextViewPort(_flags) {}
+
     void update() {
 
-        glViewport(0, context->height/2, context->width/3, context->height/3);
+        if (flags == 1)
+            glViewport(0, context->height/2, context->width/3, context->height/3);
+        if (flags == 2)
+            glViewport(0, 0, context->width/3, context->height);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -530,9 +537,13 @@ public:
 class RightCamViewPort: public ContextViewPort
 {
 public:
+    explicit RightCamViewPort(int _flags): ContextViewPort(_flags) {}
     void update() {
 
-        glViewport(context->width/3*2, context->height/2, context->width/3, context->height/3);
+        if (flags == 1)
+            glViewport(context->width/3*2, context->height/2, context->width/3, context->height/3);
+        if (flags == 2)
+            glViewport(context->width/3*2, 0, context->width/3, context->height);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -590,171 +601,6 @@ public:
     }
 };
 
-std::string UUID() {
-    std::string uuid;
-    uuid.reserve(7);
-
-    srand (time(NULL));
-
-    const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-    const size_t charmapLength = 36;
-    auto generator = [&](){ return charmap[rand()%charmapLength]; };
-
-    std::generate_n(std::back_inserter(uuid), 7, generator);
-
-    return uuid;
-}
-
-class GenerateUUIDAction: public ContextAction
-{
-    void exec() {
-        uuidFolderName = UUID();
-    }
-};
-
-class SaveImagesAction: public ContextAction
-{
-    void exec() {
-#ifdef KINECT1
-        int w = extractEndX - extractBegX;
-        int h = extractEndY - extractBegY;
-#else
-        int w = context->boxDim->getX() * 2 - 1;
-        int h = context->boxDim->getY() * 2 - 1;
-#endif
-
-        std::string path;
-        path.append("mkdir ").append(IMAGES_DIR);
-        system(path.c_str());
-
-        path.clear();
-        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuidFolderName);
-        system(path.c_str());
-
-        std::string csvFilePath;
-        csvFilePath.append(IMAGES_DIR).append("/").append(CSV_IMAGES_INFO);
-
-        //Save csv database info
-        std::FILE * csvFile;
-        csvFile = std::fopen(csvFilePath.c_str(),"a");
-        if (csvFile)
-        {
-          std::string info;
-
-          info += uuidFolderName + ";";
-          info += std::to_string(w)+ ";";
-          info += std::to_string(h)+ ";";
-          info += "\r\n";
-
-          std::fputs(info.c_str(),csvFile);
-          std::fclose (csvFile);
-        }
-
-        //
-        // KINECT 1
-        //
-        //Save original rgb image
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_FILE);
-        WriteBMPFile(context->rgbInBoxXY, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
-        WriteBMPFile(context->irImageInBoxXYZ, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-        WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
-
-
-        //Save original bitmap deth image for view.
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XY_DATA_FILE);
-        WriteFile(context->depthInBoxXY, path, w, h);
-
-
-        //Save original bitmap deth image for view.
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_DATA_FILE);
-        WriteFile(context->depthInBoxXYZ, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(KINECT_1_XYZ_IR_FILE);
-        WriteFile(context->irInBoxXYZ, path, w, h);
-    }
-};
-
-class SaveTestImagesAction: public ContextAction
-{
-    void exec() {
-        int w = context->boxDim->getX() * 2 - 1;
-        int h = context->boxDim->getY() * 2 - 1;
-
-        std::string path;
-        path.append("mkdir ").append(IMAGES_DIR);
-        system(path.c_str());
-
-        path.clear();
-        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuidFolderName);
-        system(path.c_str());
-
-        path.clear();
-        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(TEST_DIR);
-        system(path.c_str());
-
-
-        std::string prefixFilesName = UUID();
-        std::string folderTest;
-        folderTest.append(IMAGES_DIR).append("/").append(uuidFolderName).append("/").append(TEST_DIR).append("/");
-
-        std::string csvFilePath;
-        csvFilePath.append(folderTest).append(CSV_IMAGES_INFO);
-
-
-        //Save csv database info
-        std::FILE * csvFile;
-        csvFile = std::fopen(csvFilePath.c_str(),"a");
-        if (csvFile)
-        {
-          std::string info;
-
-          info += prefixFilesName + ";";
-          info += std::to_string(w)+ ";";
-          info += std::to_string(h)+ ";";
-          info += "\r\n";
-
-          std::fputs(info.c_str(),csvFile);
-          std::fclose (csvFile);
-        }
-
-        //
-        // KINECT 1
-        //
-        //Save original rgb image
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_FILE);
-        WriteBMPFile(context->rgbInBoxXY, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_IR_VIEW_FILE);
-        WriteBMPFile(context->irImageInBoxXYZ, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
-//        WriteFile(context->depthInBoxXY, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-        WriteBMPFile(context->depthImageInBoxXYZ, path, w, h);
-
-        //Save original bitmap deth image for view.
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
-        WriteFile(context->depthInBoxXYZ, path, w, h);
-    }
-};
-
 
 int main(int argc, char **argv)
 {
@@ -772,12 +618,12 @@ int main(int argc, char **argv)
 
         context->addViewport(wind, new BoxExtractViewPort);
 
-        context->addViewport(wind, new LeftCamViewPort);
-        context->addViewport(wind, new FrontCamViewPort);
-        context->addViewport(wind, new RightCamViewPort);
+        context->addViewport(wind, new LeftCamViewPort(1));
+        context->addViewport(wind, new FrontCamViewPort(1));
+        context->addViewport(wind, new RightCamViewPort(1));
 
         context->addAction('1', new GenerateUUIDAction);
-    //    context->addAction('2', new CreateImagesCacheAction);
+        context->addAction('2', new CreateImagesCacheAction);
         context->addAction('3', new SaveImagesAction);
         context->addAction('5', new SaveTestImagesAction);
     }
