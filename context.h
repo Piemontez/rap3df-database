@@ -54,6 +54,8 @@ class Context
 public:
     std::string uuid;
     int step{0};
+    int imagesSaved{0};
+    int currTaked{0};
 
 
     double freenect_angle;

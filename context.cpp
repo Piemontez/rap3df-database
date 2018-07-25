@@ -240,6 +240,8 @@ void Context::addAction(const unsigned char key, ContextAction* action)
 
 void Context::keyPressed(unsigned char key, int x, int y)
 {
+    std::cout << key << std::endl;
+
     cam->holdingForward = false;
     cam->holdingBackward = false;
     cam->holdingRightStrafe = false;

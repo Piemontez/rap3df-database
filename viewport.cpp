@@ -75,14 +75,14 @@ void InfoViewPort::update() {
         glLoadIdentity();
 
 
-        gluOrtho2D(0.0, context->width, 0.0, context->height);
+        gluOrtho2D(0, context->width, 0.0, context->height);
         glMatrixMode(GL_MODELVIEW);
         glColor3f(0, 0.0, 0.0);
         glPushMatrix();
         {
             glLoadIdentity();
 
-            glRasterPos2i(10, 10);
+            glRasterPos2i(5, 15);
             std::string s;
             if (this->context->step == 0) {
                 s = "Type 1: Start.";
@@ -94,13 +94,30 @@ void InfoViewPort::update() {
                 s += " Liberado para coletar novos dados. Type 1: start";
             }
             if (this->context->step == 1) {
-                s += (context->curr_rgbImageXY.size() ? " Com imagens." : " Sem imagens.");
-                s += " Type 2: capture images";
+                if (this->context->currTaked == 0) {
+                    s += " Defina o tipo de imagem. Type f";
+                } else {
+                    s += (context->curr_rgbImageXY.size() ? " Com imagens." : " Sem imagens.");
+                    s += " Type 2: capture images";
+                }
             }
-//            s =
-//                    + " Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ())
-//                    + " CamDepth:" + std::to_string(this->context->boxPos->getZ());
 
+            for (std::string::iterator i = s.begin(); i != s.end(); ++i)
+            {
+                char c = *i;
+                glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+            }
+
+            glRasterPos2i(5, 0);
+            s = "Images:";
+            s += ((this->context->imagesSaved & 1 > 0) ? " F " : " - "); //Front
+            s += ((this->context->imagesSaved & 1 > 0) ? " L " : " - "); //Left
+            s += ((this->context->imagesSaved & 1 > 0) ? " R " : " - "); //Right
+            s += ((this->context->imagesSaved & 1 > 0) ? " T " : " - "); //Top
+            s += ((this->context->imagesSaved & 1 > 0) ? " D " : " - "); //Down
+            s += ((this->context->imagesSaved & 1 > 0) ? " B " : " - "); //Pocket Lighter
+            s += " Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ());
+            s += " CamDepth:" + std::to_string(this->context->boxPos->getZ());
             for (std::string::iterator i = s.begin(); i != s.end(); ++i)
             {
                 char c = *i;
