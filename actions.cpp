@@ -58,6 +58,10 @@ void SaveImagesAction::exec(char key) {
 
     const std::string &uuid = this->context->uuid;
     std::string path;
+
+    std::string csvFilePath;
+    csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
+
     Json::Value root;
     Json::Reader reader;
     Json::StyledWriter writer;
@@ -72,15 +76,20 @@ void SaveImagesAction::exec(char key) {
     }
 
     {//Carrega o arquivo json
-        std::string csvFilePath;
-        csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
-
         std::FILE * csvFile;
         csvFile = std::fopen(csvFilePath.c_str(),"a");
+
+        std::string json;
+        if (csvFile) {
+            char buf[2];
+            while (std::fgets(buf, sizeof buf, csvFile) != NULL) {
+                json.push_back(buf[0]);
+            }
+            std::fclose(csvFile);
+        }
+
+        reader.parse(json, root);
     }
-
-
-    reader.parse("{ faces: [] }", root);
 
     if (root[uuid].empty())
     {
@@ -96,13 +105,18 @@ void SaveImagesAction::exec(char key) {
         root[uuid] = images;
     }
 
-    writer.write( root );
-
     switch (context->currImageType) {
-    case value:
-
+    case 1://Front
         break;
-    default:
+    case 2://Top
+        break;
+    case 4://Down
+        break;
+    case 8://Left
+        break;
+    case 16://Right
+        break;
+    case 32://Burned
         break;
     }
 
@@ -114,27 +128,17 @@ void SaveImagesAction::exec(char key) {
     }
 
 
+    {//Save json database info
+        std::cout << root << std::endl;
 
-    std::cout << root << std::endl;
+        std::FILE * csvFile;
+        csvFile = std::fopen(csvFilePath.c_str(),"w+");
+        if (csvFile) {
+            std::fputs(writer.write( root ).c_str(),csvFile);
+            std::fclose(csvFile);
+        }
+    }
 
-
-//    //Save csv database info
-//    std::FILE * csvFile;
-//    csvFile = std::fopen(csvFilePath.c_str(),"a");
-//    if (csvFile)
-//    {
-//        std::string info;
-
-//        info += this->context->uuid + ";";
-//        info += std::to_string(w)+ ";";
-//        info += std::to_string(h)+ ";";
-//        info += "\r\n";
-
-//        std::fputs(info.c_str(),csvFile);
-//        std::fclose (csvFile);
-//    }
-
-//    //
 //    // KINECT 1
 //    //
 //    //Save original rgb image

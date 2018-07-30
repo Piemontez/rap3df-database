@@ -31,7 +31,7 @@ std::vector<std::string> heights;
 int main(int argc, char **argv)
 {
     std::string csvFilePath;
-    csvFilePath.append(IMAGES_DIR).append("/").append(CSV_IMAGES_INFO);
+    csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
 
     //Carrega arquivo com arquivos
     std::vector<std::string> folders;
