@@ -77,7 +77,7 @@ void SaveImagesAction::exec(char key) {
 
     {//Carrega o arquivo json
         std::FILE * csvFile;
-        csvFile = std::fopen(csvFilePath.c_str(),"a");
+        csvFile = std::fopen(csvFilePath.c_str(),"r");
 
         std::string json;
         if (csvFile) {
@@ -87,6 +87,7 @@ void SaveImagesAction::exec(char key) {
             }
             std::fclose(csvFile);
         }
+        std::cout << json << std::endl;
 
         reader.parse(json, root);
     }
