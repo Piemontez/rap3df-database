@@ -5,6 +5,10 @@
 #include "freenectdevice.h"
 #include "utils.h"
 
+#include "json/value.h"
+#include "json/reader.h"
+#include "json/writer.h"
+
 std::string UUID() {
     std::string uuid;
     uuid.reserve(7);
@@ -50,155 +54,132 @@ void SaveImagesAction::exec(char key) {
     int w = context->boxDim->getX() * 2 - 1;
     int h = context->boxDim->getY() * 2 - 1;
 #endif
+    if (!context->currImageType) return;
 
+    const std::string &uuid = this->context->uuid;
     std::string path;
-    path.append("mkdir ").append(IMAGES_DIR);
-    system(path.c_str());
+    Json::Value root;
+    Json::Reader reader;
+    Json::StyledWriter writer;
 
-    path.clear();
-    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuid);
-    system(path.c_str());
+    {//Cria o diretório
+        path.append("mkdir ").append(IMAGES_DIR);
+        system(path.c_str());
 
-    std::string csvFilePath;
-    csvFilePath.append(IMAGES_DIR).append("/").append(CSV_IMAGES_INFO);
-
-    //Save csv database info
-    std::FILE * csvFile;
-    csvFile = std::fopen(csvFilePath.c_str(),"a");
-    if (csvFile)
-    {
-        std::string info;
-
-        info += this->context->uuid + ";";
-        info += std::to_string(w)+ ";";
-        info += std::to_string(h)+ ";";
-        info += "\r\n";
-
-        std::fputs(info.c_str(),csvFile);
-        std::fclose (csvFile);
+        path.clear();
+        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuid);
+        system(path.c_str());
     }
 
-    //
-    // KINECT 1
-    //
-    //Save original rgb image
+    {//Carrega o arquivo json
+        std::string csvFilePath;
+        csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
+
+        std::FILE * csvFile;
+        csvFile = std::fopen(csvFilePath.c_str(),"a");
+    }
+
+
+    reader.parse("{ faces: [] }", root);
+
+    if (root[uuid].empty())
+    {
+        root["_faces"].append(uuid);
+
+        Json::Value images;
+        images["front"];
+        images["left"];
+        images["right"];
+        images["top"];
+        images["down"];
+
+        root[uuid] = images;
+    }
+
+    writer.write( root );
+
+    switch (context->currImageType) {
+    case value:
+
+        break;
+    default:
+        break;
+    }
+
     if (context->curr_rgbImageXY.size()) {
-        path.clear();
+        std::string path;
         path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_FILE);
-        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
-    }
 
-    //Save original bitmap deth image for view.
-    if (context->curr_irImageXYZ.size()) {
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
-        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
-    }
-
-    //Save original bitmap deth image for view.
-    if (context->curr_depthImageXYZ.size()) {
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
+//        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
     }
 
 
-    //Save original bitmap deth image for view.
-    if (context->curr_depthXY.size()) {
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_DATA_FILE);
-        WriteFile(context->curr_depthXY, path, w, h);
-    }
+
+    std::cout << root << std::endl;
 
 
-    //Save original bitmap deth image for view.
-    if (context->curr_depthXYZ.size()) {
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DATA_FILE);
-        WriteFile(context->curr_depthXYZ, path, w, h);
-    }
+//    //Save csv database info
+//    std::FILE * csvFile;
+//    csvFile = std::fopen(csvFilePath.c_str(),"a");
+//    if (csvFile)
+//    {
+//        std::string info;
 
-    //Save original bitmap deth image for view.
-    if (context->curr_irXYZ.size()) {
-        path.clear();
-        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_FILE);
-        WriteFile(context->curr_irXYZ, path, w, h);
-    }
-}
+//        info += this->context->uuid + ";";
+//        info += std::to_string(w)+ ";";
+//        info += std::to_string(h)+ ";";
+//        info += "\r\n";
 
-void SaveTestImagesAction::exec(char key) {
-    int w = context->boxDim->getX() * 2 - 1;
-    int h = context->boxDim->getY() * 2 - 1;
+//        std::fputs(info.c_str(),csvFile);
+//        std::fclose (csvFile);
+//    }
 
-    std::string path;
-    path.append("mkdir ").append(IMAGES_DIR);
-    system(path.c_str());
+//    //
+//    // KINECT 1
+//    //
+//    //Save original rgb image
+//    if (context->curr_rgbImageXY.size()) {
+//        path.clear();
+//        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_FILE);
+//        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+//    }
 
-    path.clear();
-    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuid);
-    system(path.c_str());
+//    //Save original bitmap deth image for view.
+//    if (context->curr_irImageXYZ.size()) {
+//        path.clear();
+//        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_VIEW_FILE);
+//        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
+//    }
 
-    path.clear();
-    path.append("mkdir ").append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(TEST_DIR);
-    system(path.c_str());
-
-
-    std::string prefixFilesName = UUID();
-    std::string folderTest;
-    folderTest.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(TEST_DIR).append("/");
-
-    std::string csvFilePath;
-    csvFilePath.append(folderTest).append(CSV_IMAGES_INFO);
+//    //Save original bitmap deth image for view.
+//    if (context->curr_depthImageXYZ.size()) {
+//        path.clear();
+//        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
+//        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
+//    }
 
 
-    //Save csv database info
-    std::FILE * csvFile;
-    csvFile = std::fopen(csvFilePath.c_str(),"a");
-    if (csvFile)
-    {
-        std::string info;
+//    //Save original bitmap deth image for view.
+//    if (context->curr_depthXY.size()) {
+//        path.clear();
+//        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_DATA_FILE);
+//        WriteFile(context->curr_depthXY, path, w, h);
+//    }
 
-        info += prefixFilesName + ";";
-        info += std::to_string(w)+ ";";
-        info += std::to_string(h)+ ";";
-        info += "\r\n";
 
-        std::fputs(info.c_str(),csvFile);
-        std::fclose (csvFile);
-    }
+//    //Save original bitmap deth image for view.
+//    if (context->curr_depthXYZ.size()) {
+//        path.clear();
+//        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_DATA_FILE);
+//        WriteFile(context->curr_depthXYZ, path, w, h);
+//    }
 
-    //
-    // KINECT 1
-    //
-    //Save original rgb image
-    if (context->curr_rgbImageXY.size()) {
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_FILE);
-        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
-    }
-
-    //Save original bitmap deth image for view.
-    if (context->curr_irImageXYZ.size()) {
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_IR_VIEW_FILE);
-        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
-    }
-
-    //Save original bitmap deth image for view.
-    if (context->curr_depthXY.size()) {
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XY_DATA_FILE);
-        WriteFile(context->curr_depthXY, path, w, h);
-    }
-
-    //Save original bitmap deth image for view.
-    if (context->curr_depthImageXYZ.size()) {
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DEPTH_VIEW_FILE);
-        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
-    }
-
-    //Save original bitmap deth image for view.
-    if (context->curr_depthXYZ.size()) {
-        path.clear(); path.append(folderTest).append(prefixFilesName).append(KINECT_1_XYZ_DATA_FILE);
-        WriteFile(context->curr_depthXYZ, path, w, h);
-    }
+//    //Save original bitmap deth image for view.
+//    if (context->curr_irXYZ.size()) {
+//        path.clear();
+//        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XYZ_IR_FILE);
+//        WriteFile(context->curr_irXYZ, path, w, h);
+//    }
 }
 
 void SetImageTypeAction::exec(char key)

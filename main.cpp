@@ -10,8 +10,7 @@ int main(int argc, char **argv)
 
     context->addAction('1', new GenerateUUIDAction);
     context->addAction('2', new CreateImagesCacheAction);
-    context->addAction('8', new SaveImagesAction);
-    context->addAction('9', new SaveTestImagesAction);
+    context->addAction('9', new SaveImagesAction);
     context->addAction('0', new EnableNewDataCollectionAction);
 
     context->addAction('f', new SetImageTypeAction);

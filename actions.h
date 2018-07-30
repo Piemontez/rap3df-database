@@ -18,11 +18,6 @@ class SaveImagesAction: public ContextAction
     void exec(char key);
 };
 
-class SaveTestImagesAction: public ContextAction
-{
-    void exec(char key);
-};
-
 class EnableNewDataCollectionAction: public ContextAction
 {
     void exec(char key);

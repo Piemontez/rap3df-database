@@ -28,7 +28,10 @@ set(OpenGL_GL_PREFERENCE "LEGACY")
 
 find_package(OpenGL)
 find_package(GLUT)
+#find_package(jsoncpp REQUIRED)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JSONCPP jsoncpp)
 
 if (OPENGL_FOUND AND GLUT_FOUND)
   include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${freenect2_INCLUDE_DIR})
@@ -41,7 +44,8 @@ if (OPENGL_FOUND AND GLUT_FOUND)
       #freenect
 
       ${OPENGL_LIBRARIES}
-      ${GLUT_LIBRARY})
+      ${GLUT_LIBRARY}
+      ${JSONCPP_LIBRARIES})
 
   target_link_libraries(rap3df-acquisition
 
@@ -52,7 +56,8 @@ if (OPENGL_FOUND AND GLUT_FOUND)
       ${FreeImage_LIBRARIES}
 
       ${OPENGL_LIBRARIES}
-      ${GLUT_LIBRARY})
+      ${GLUT_LIBRARY}
+      ${JSONCPP_LIBRARIES})
 
   install(TARGETS rap3df-viewer DESTINATION bin)
   install(TARGETS rap3df-acquisition DESTINATION bin)

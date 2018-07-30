@@ -2,8 +2,7 @@
 #define UTILS_H
 
 #define IMAGES_DIR "rap3df_data"
-#define TEST_DIR "tests"
-#define CSV_IMAGES_INFO "database.csv"
+#define JSON_IMAGES_INFO "database.json"
 
 #define KINECT_1_XY_FILE "k1_box_xy.bmp"
 #define KINECT_1_XYZ_IR_VIEW_FILE "k1_box_xy_ir_view.bmp"
