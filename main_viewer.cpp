@@ -80,7 +80,7 @@ int main(int argc, char **argv)
         for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); i++)
         {
             csvFilePath.clear();
-            csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
+            csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(FILE_DATA_DEPTH_BG_REM);
 
             std::vector<uint16_t> data;
             std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");

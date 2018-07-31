@@ -72,32 +72,32 @@ void SaveImagesAction::exec(char key) {
     Json::Value curr;
 //    if (context->curr_rgbImageXY.size())
     {
-        file = path; file.append("/").append(KINECT_1_XY_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_BMP_RGB); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["rgbXY"] = file;
 //        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
     }
     if (context->curr_irImageXYZ.size()) {
-        file = path; file.append("/").append(KINECT_1_XYZ_IR_VIEW_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_BMP_IR_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
 //        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
     }
     if (context->curr_depthImageXYZ.size()) {
-        file = path; file.append("/").append(KINECT_1_XYZ_DEPTH_VIEW_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_BMP_DEPTH_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXYZ"] = file;
 //        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
     }
     if (context->curr_depthXY.size()) {
-        file = path; file.append("/").append(KINECT_1_XY_DATA_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_DATA_DEPTH); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXY"] = file;
 //        WriteFile(context->curr_depthXY, path, w, h);
     }
     if (context->curr_depthXYZ.size()) {
-        file = path; file.append("/").append(KINECT_1_XYZ_DATA_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_DATA_DEPTH_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXYZ"] = file;
 //        WriteFile(context->curr_depthXYZ, path, w, h);
     }
     if (context->curr_irXYZ.size()) {
-        file = path; file.append("/").append(KINECT_1_XYZ_IR_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_DATA_IR_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
 //        WriteFile(context->curr_irXYZ, path, w, h);
     }
