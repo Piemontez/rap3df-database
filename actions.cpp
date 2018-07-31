@@ -96,8 +96,7 @@ void SaveImagesAction::exec(char key) {
         curr["depthXYZ"] = file;
 //        WriteFile(context->curr_depthXYZ, path, w, h);
     }
-    if (context->curr_irXYZ.size())
-    {
+    if (context->curr_irXYZ.size()) {
         file = path; file.append("/").append(KINECT_1_XYZ_IR_FILE); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
 //        WriteFile(context->curr_irXYZ, path, w, h);

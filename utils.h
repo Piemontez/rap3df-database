@@ -4,13 +4,13 @@
 #define IMAGES_DIR "rap3df_data"
 #define JSON_IMAGES_INFO "database.json"
 
-#define KINECT_1_XY_FILE "rgb_xy_ID.bmp"
-#define KINECT_1_XYZ_IR_VIEW_FILE "ir_xyz_ID.bmp"
-#define KINECT_1_XYZ_DEPTH_VIEW_FILE "depth_xyz_ID.bmp"
+#define KINECT_1_XY_FILE "rgb_ID.bmp"
+#define KINECT_1_XYZ_IR_VIEW_FILE "ir_rmBg_ID.bmp"
+#define KINECT_1_XYZ_DEPTH_VIEW_FILE "depth_rmBg_ID.bmp"
 
-#define KINECT_1_XY_DATA_FILE "depth_xy_ID.data"
-#define KINECT_1_XYZ_DATA_FILE "depth_xyz_ID.data"
-#define KINECT_1_XYZ_IR_FILE "ir_xyz_ID.data"
+#define KINECT_1_XY_DATA_FILE "depth_ID.data"
+#define KINECT_1_XYZ_DATA_FILE "depth_rmBg_ID.data"
+#define KINECT_1_XYZ_IR_FILE "ir_rmBg_ID.data"
 
 struct Pixel
 {
