@@ -107,8 +107,19 @@ void InfoViewPort::update() {
             s += ((this->context->currImageType & 8)  ? " X " : (this->context->imagesSaved & 8 > 0) ? " L " : " - "); //Left
             s += ((this->context->currImageType & 16) ? " X " : (this->context->imagesSaved & 16 > 0) ? " R " : " - "); //Right
             s += ((this->context->currImageType & 32) ? " X " : (this->context->imagesSaved & 32 > 0) ? " B " : " - "); //Pocket Lighter
-            s += " Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ());
-            s += " CamDepth:" + std::to_string(this->context->boxPos->getZ());
+            if (context->errorCode) {
+                switch (context->errorCode) {
+                case 1:
+                    s+= "Nenhum tipo de imagem informado.";
+                    break;
+                case 2:
+                    s+= "Nenhum dado (BMP,DATA) capturado";
+                    break;
+                }
+            } else {
+                s += "Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ());
+                s += "CamDepth:" + std::to_string(this->context->boxPos->getZ());
+            }
             for (std::string::iterator i = s.begin(); i != s.end(); ++i)
             {
                 char c = *i;
@@ -141,23 +152,23 @@ void PointCamViewPort::update() {
         glPointSize(1.0f);
         glBegin(GL_POINTS);
 
-        if (context->depth2)
+        if (context->_depth)
         {
-            int w = context->depth2->width;
-            int h = context->depth2->height;
+            int w = context->_depth->width;
+            int h = context->_depth->height;
 
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x) * 4;
 
-                    if (!context->rgb2->status)
+                    if (!context->_rgb->status)
                         glColor3ub( context->registered->data[i+2],    // R
                                 context->registered->data[i+1],    // G
                                 context->registered->data[i+0]);  // A
 
-                    if (!context->depth2->status && context->depth2->data[i+2] > 0)
-                        MakeVertex(x, y, context->depth2->data[i+2], w, h);
+                    if (!context->_depth->status && context->_depth->data[i+2] > 0)
+                        MakeVertex(x, y, context->_depth->data[i+2], w, h);
 
                 }
         }
@@ -179,10 +190,10 @@ void TriangleCamViewPort::update() {
         glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
         glBegin(GL_TRIANGLES);
-        if (context->depth2)
+        if (context->_depth)
         {
-            int w = context->depth2->width;
-            int h = context->depth2->height;
+            int w = context->_depth->width;
+            int h = context->_depth->height;
             int j;
 
             for (int y = 0; y < (h -1); ++y)
@@ -190,33 +201,33 @@ void TriangleCamViewPort::update() {
                 {
                     int i = ((y * w) + x) * 4;
 
-                    if (!context->rgb2->status)
+                    if (!context->_rgb->status)
                         glColor3ub( context->registered->data[i+2],    // R
                                 context->registered->data[i+1],    // G
                                 context->registered->data[i+0]);  // A
 
-                    if (!context->depth2->status)
+                    if (!context->_depth->status)
                     {
-                        if (context->depth2->data[i+2] > 0
-                                && context->depth2->data[i+6] > 0
-                                && context->depth2->data[i+2+(w * 4)] > 0) {
+                        if (context->_depth->data[i+2] > 0
+                                && context->_depth->data[i+6] > 0
+                                && context->_depth->data[i+2+(w * 4)] > 0) {
                             j = i;
-                            MakeVertex(x, y, context->depth2->data[j+2], w, h);
+                            MakeVertex(x, y, context->_depth->data[j+2], w, h);
                             j = i+4;
-                            MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
+                            MakeVertex(x+1, y, context->_depth->data[j+2], w, h);
                             j = i+(w * 4);
-                            MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
+                            MakeVertex(x, y+1, context->_depth->data[j+2], w, h);
                         }
 
-                        if (context->depth2->data[i+6] > 0
-                                && context->depth2->data[i+2+(w * 4)] > 0
-                                && context->depth2->data[i+6+(w * 4)] > 0) {
+                        if (context->_depth->data[i+6] > 0
+                                && context->_depth->data[i+2+(w * 4)] > 0
+                                && context->_depth->data[i+6+(w * 4)] > 0) {
                             j = i+4;
-                            MakeVertex(x+1, y, context->depth2->data[j+2], w, h);
+                            MakeVertex(x+1, y, context->_depth->data[j+2], w, h);
                             j = i+(w * 4);
-                            MakeVertex(x, y+1, context->depth2->data[j+2], w, h);
+                            MakeVertex(x, y+1, context->_depth->data[j+2], w, h);
                             j = i+(w * 4)+4;
-                            MakeVertex(x+1, y+1, context->depth2->data[j+2], w, h);
+                            MakeVertex(x+1, y+1, context->_depth->data[j+2], w, h);
                         }
 
                     }
@@ -234,12 +245,12 @@ void BoxExtractViewPort::update() {
     context->depthImageZ.clear();
     context->depthZ.clear();
 
-    context->irImageXYZ.clear();
-    context->irXYZ.clear();
+    context->irImageZ.clear();
+    context->irZ.clear();
 
-    if (context->depth2) {
-        int w = context->depth2->width;
-        int h = context->depth2->height;
+    if (context->_depth) {
+        int w = context->_depth->width;
+        int h = context->_depth->height;
 
         for (int y = 0; y < (h -1); ++y)
             for (int x = 0; x < (w -1); ++x)
@@ -256,35 +267,35 @@ void BoxExtractViewPort::update() {
                     context->rgbImage.push_back(context->registered->data[i+1]);
                     context->rgbImage.push_back(context->registered->data[i+0]);
 
-                    uint16_t depth = context->depth2->data[i+2];
+                    uint16_t depth = context->_depth->data[i+2];
                     context->depth.push_back(depth);
 
                     if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
                             && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
                     {
-                        uint16_t depth = context->depth2->data[i+2];
+                        uint16_t depth = context->_depth->data[i+2];
                         context->depthImageZ.push_back(depth & 0xff);
                         context->depthImageZ.push_back(depth >> 8);
                         context->depthImageZ.push_back(0);
 
                         context->depthZ.push_back(depth);
 
-                        uint16_t ir = context->ir2->data[i+2];
-                        context->irImageXYZ.push_back(ir % 255);
-                        context->irImageXYZ.push_back(ir / 255);
-                        context->irImageXYZ.push_back(0);
+                        uint16_t ir = context->_ir->data[i+2];
+                        context->irImageZ.push_back(ir % 255);
+                        context->irImageZ.push_back(ir / 255);
+                        context->irImageZ.push_back(0);
 
-                        context->irXYZ.push_back(ir);
+                        context->irZ.push_back(ir);
                     } else {
                         context->depthImageZ.push_back(0);
                         context->depthImageZ.push_back(0);
                         context->depthImageZ.push_back(0);
                         context->depthZ.push_back(0);
 
-                        context->irImageXYZ.push_back(0);
-                        context->irImageXYZ.push_back(0);
-                        context->irImageXYZ.push_back(0);
-                        context->irXYZ.push_back(0);
+                        context->irImageZ.push_back(0);
+                        context->irImageZ.push_back(0);
+                        context->irImageZ.push_back(0);
+                        context->irZ.push_back(0);
                     }
                 }
             }

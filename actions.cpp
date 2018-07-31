@@ -37,24 +37,23 @@ void CreateImagesCacheAction::exec(char key) {
         this->context->step = 2;
 
         context->curr_rgbImage = context->rgbImage;
-        context->curr_irImageZ = context->irImageXYZ;
+        context->curr_irImageZ = context->irImageZ;
         context->curr_depthImageZ = context->depthImageZ;
         context->curr_depth = context->depth;
         context->curr_depthZ = context->depthZ;
-        context->curr_irZ = context->irXYZ;
+        context->curr_irZ = context->irZ;
     } else
         this->context->step = 1;
 }
 
 void SaveImagesAction::exec(char key) {
-#ifdef KINECT1
-    int w = extractEndX - extractBegX;
-    int h = extractEndY - extractBegY;
-#else
     int w = context->boxDim->getX() * 2 - 1;
     int h = context->boxDim->getY() * 2 - 1;
-#endif
-    if (!context->currImageType) return;
+
+    if (!context->currImageType) {
+        context->errorCode = 1;
+        return;
+    }
 
     const std::string &uuid = this->context->uuid;
     const std::string &fileID = UUID(3);
@@ -70,40 +69,41 @@ void SaveImagesAction::exec(char key) {
     Json::StyledWriter writer;
 
     Json::Value curr;
-    if (context->curr_rgbImage.size())
-    {
+    if (context->curr_rgbImage.size()) {
         file = path; file.append("/").append(FILE_BMP_DEPTH_RGB_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["rgbXY"] = file;
-//        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+        WriteBMPFile(context->curr_rgbImage, path, w, h);
     }
     if (context->curr_irImageZ.size()) {
         file = path; file.append("/").append(FILE_BMP_IR_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
-//        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
+        WriteBMPFile(context->curr_irImageZ, path, w, h);
     }
     if (context->curr_depthImageZ.size()) {
         file = path; file.append("/").append(FILE_BMP_DEPTH_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXYZ"] = file;
-//        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
+        WriteBMPFile(context->curr_depthImageZ, path, w, h);
     }
     if (context->curr_depth.size()) {
         file = path; file.append("/").append(FILE_DATA_DEPTH); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXY"] = file;
-//        WriteFile(context->curr_depthXY, path, w, h);
+        WriteFile(context->curr_depth, path, w, h);
     }
     if (context->curr_depthZ.size()) {
         file = path; file.append("/").append(FILE_DATA_DEPTH_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXYZ"] = file;
-//        WriteFile(context->curr_depthXYZ, path, w, h);
+        WriteFile(context->curr_depthZ, path, w, h);
     }
     if (context->curr_irZ.size()) {
         file = path; file.append("/").append(FILE_DATA_IR_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
-//        WriteFile(context->curr_irXYZ, path, w, h);
+        WriteFile(context->curr_irZ, path, w, h);
     }
 
-    if (curr.empty()) return;
-
+    if (curr.empty()) {
+        context->errorCode = 2;
+        return;
+    }
 
     {//Cria o diretório
         std::string mkdir = "mkdir -p ";

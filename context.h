@@ -53,6 +53,7 @@ public:
     int step{0};
     int imagesSaved{0};
     int currImageType{0};
+    int errorCode{0}; //1 ,2: Nenhuma imagem capturada
 
     double freenect_angle;
     Camera* cam;
@@ -76,18 +77,16 @@ public:
     libfreenect2::Frame* undistorted;
     libfreenect2::Frame* registered;
 
-    libfreenect2::Frame *rgb2{0};
-    libfreenect2::Frame *ir2{0};
-    libfreenect2::Frame *depth2{0};
+    libfreenect2::Frame *_rgb{0};
+    libfreenect2::Frame *_ir{0};
+    libfreenect2::Frame *_depth{0};
 
-    std::vector<uint8_t> rgbImage; //RGB in the BOX
-    std::vector<uint16_t> depth; //Depth in the BOX
-
-    std::vector<uint8_t> irImageXYZ; //Depth Image in the BOX
-    std::vector<uint16_t> irXYZ; //Depth Image in the BOX
-
-    std::vector<uint8_t> depthImageZ; //Depth Image in the BOX
-    std::vector<uint16_t> depthZ; //Depth in the BOX
+    std::vector<uint8_t> rgbImage;
+    std::vector<uint8_t> irImageZ;
+    std::vector<uint16_t> irZ;
+    std::vector<uint16_t> depth;
+    std::vector<uint16_t> depthZ;
+    std::vector<uint8_t> depthImageZ;
 
     std::vector<uint8_t> curr_rgbImage;
     std::vector<uint16_t> curr_depth;

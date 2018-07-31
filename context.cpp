@@ -181,11 +181,11 @@ void Context::notify(int window) {
     bool hasFrame = listener && listener->waitForNewFrame(frames, 10*1000);
     if(hasFrame)
     {
-      rgb2 = frames[libfreenect2::Frame::Color];
-      ir2 = frames[libfreenect2::Frame::Ir];
-      depth2 = frames[libfreenect2::Frame::Depth];
+      _rgb = frames[libfreenect2::Frame::Color];
+      _ir = frames[libfreenect2::Frame::Ir];
+      _depth = frames[libfreenect2::Frame::Depth];
 
-      registration->apply(rgb2, depth2, undistorted, registered);
+      registration->apply(_rgb, _depth, undistorted, registered);
     }
 
 
@@ -269,6 +269,8 @@ void Context::keyPressed(int key, int x, int y)
 
 void Context::keyPressed(unsigned char key, int x, int y)
 {
+    errorCode = 0;
+
     cam->holdingForward = false;
     cam->holdingBackward = false;
     cam->holdingRightStrafe = false;
