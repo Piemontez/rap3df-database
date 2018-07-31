@@ -58,21 +58,30 @@ void SaveImagesAction::exec(char key) {
 
     const std::string &uuid = this->context->uuid;
     std::string path;
-
+    path.append(IMAGES_DIR).append("/").append(uuid);
     std::string csvFilePath;
     csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
+    std::string file;
 
     Json::Value root;
     Json::Reader reader;
     Json::StyledWriter writer;
 
-    {//Cria o diretório
-        path.append("mkdir ").append(IMAGES_DIR);
-        system(path.c_str());
+    Json::Value curr;
+//    if (context->curr_rgbImageXY.size())
+    {
+        file = path; file.append("/").append(KINECT_1_XY_FILE);
+        curr["rgbXY"] = file;
+//        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
+    }
 
-        path.clear();
-        path.append("mkdir ").append(IMAGES_DIR).append("/").append(uuid);
-        system(path.c_str());
+    if (curr.empty()) return;
+
+
+    {//Cria o diretório
+        std::string mkdir = "mkdir -p ";
+        mkdir.append(path);
+        system(mkdir.c_str());
     }
 
     {//Carrega o arquivo json
@@ -92,41 +101,42 @@ void SaveImagesAction::exec(char key) {
         reader.parse(json, root);
     }
 
+    Json::Value images;
     if (root[uuid].empty())
     {
         root["_faces"].append(uuid);
 
-        Json::Value images;
         images["front"];
         images["left"];
         images["right"];
         images["top"];
         images["down"];
-
-        root[uuid] = images;
+    } else {
+        images = root[uuid];
     }
+
 
     switch (context->currImageType) {
     case 1://Front
+        images["front"].append(curr);
         break;
     case 2://Top
+        images["top"].append(curr);
         break;
     case 4://Down
+        images["down"].append(curr);
         break;
     case 8://Left
+        images["left"].append(curr);
         break;
     case 16://Right
+        images["right"].append(curr);
         break;
     case 32://Burned
+        images["burned"].append(curr);
         break;
     }
-
-    if (context->curr_rgbImageXY.size()) {
-        std::string path;
-        path.append(IMAGES_DIR).append("/").append(this->context->uuid).append("/").append(KINECT_1_XY_FILE);
-
-//        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
-    }
+    root[uuid] = images;
 
 
     {//Save json database info

@@ -15,20 +15,11 @@
 #include "camera.h"
 #include "utils.h"
 
-#ifdef KINECT1
-void MakeVertex(int pos, float depth, int w, int h) {
-    glVertex3f( (pos%w- (w-1)/2.f) * depth / Context::instance()->f,  // X = (x - cx) * d / fx
-                (pos/w - (h-1)/2.f) * depth / Context::instance()->f,  // Y = (y - cy) * d / fy
-                depth );
-}
-#else
-
 #define depthScale 1.0f
 
 void MakeVertex(float x, float y, float depth, int w, int h) {
     glVertex3f(x-(w/2), y-(h/2), depth * depthScale);
 }
-#endif
 
 void BoxCamViewPort::update() {
 
@@ -150,16 +141,6 @@ void PointCamViewPort::update() {
         glPointSize(1.0f);
         glBegin(GL_POINTS);
 
-#ifdef KINECT1
-        for (int i = 0; i < 480*640; ++i)
-        {
-            glColor3ub( rgb[3*i+0],    // R
-                    rgb[3*i+1],    // G
-                    rgb[3*i+2] );  // B
-
-            MakeVertex(i, depth[i]);
-        }
-#else
         if (context->depth2)
         {
             int w = context->depth2->width;
@@ -180,7 +161,6 @@ void PointCamViewPort::update() {
 
                 }
         }
-#endif
         glEnd();
     }
 }
@@ -199,30 +179,6 @@ void TriangleCamViewPort::update() {
         glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
         glBegin(GL_TRIANGLES);
-#ifdef KINECT1
-        for (int j, i = 0; i < 480*638; ++i)
-        {
-            if (depth[i] > 0 && depth[i+1] > 0 && depth[i+640] > 0 && depth[i+641] > 0) {
-                glColor3ub( rgb[3*i+0],    // R
-                        rgb[3*i+1],    // G
-                        rgb[3*i+2] );  // B
-
-                j = i;
-                MakeVertex(j, depth[j]);
-                j = i+1;
-                MakeVertex(j, depth[j]);
-                j = i+640;
-                MakeVertex(j, depth[j]);
-
-                j = i+1;
-                MakeVertex(j, depth[j]);
-                j = i+640;
-                MakeVertex(j, depth[j]);
-                j = i+641;
-                MakeVertex(j, depth[j]);
-            }
-        }
-#else
         if (context->depth2)
         {
             int w = context->depth2->width;
@@ -267,7 +223,6 @@ void TriangleCamViewPort::update() {
 
                 }
         }
-#endif
         glEnd();
     }
 }
@@ -282,45 +237,6 @@ void BoxExtractViewPort::update() {
     context->irImageXYZ.clear();
     context->irXYZ.clear();
 
-#ifdef KINECT1
-    std::vector<uint8_t>::iterator itRgb = rgb.begin();
-    std::vector<uint16_t>::iterator itDepth = depth.begin();
-
-    for (int j = 0; j < 480; j++) //Rows
-        for (int k = 0; k < 640; k++) //Cols
-        {
-            if (k >= extractBegX && k < extractEndX
-                    && j >= extractBegY && j < extractEndY) {
-                context->rgbInBoxXY.push_back(*itRgb++);
-                context->rgbInBoxXY.push_back(*itRgb++);
-                context->rgbInBoxXY.push_back(*itRgb++);
-
-                context->depthImageInBoxXY.push_back((*itDepth) & 0xff);
-                context->depthImageInBoxXY.push_back((*itDepth) >> 8);
-                context->depthImageInBoxXY.push_back(0);
-
-                context->depthInBoxXY.push_back(*itDepth);
-
-                if ((*itDepth) > (context->boxPos->getZ() - context->boxDim->getZ())
-                        && (*itDepth) < (context->boxPos->getZ() + context->boxDim->getZ()))
-                {
-                    context->depthImageInBoxXYZ.push_back((*itDepth) & 0xff);
-                    context->depthImageInBoxXYZ.push_back((*itDepth) >> 8);
-                    context->depthImageInBoxXYZ.push_back(0);
-
-                    context->depthInBoxXYZ.push_back(*itDepth);
-                } else {
-                    context->depthImageInBoxXYZ.push_back(0);
-                    context->depthImageInBoxXYZ.push_back(0);
-                    context->depthImageInBoxXYZ.push_back(0);
-                    context->depthInBoxXYZ.push_back(0);
-                }
-            } else {
-                itRgb+=3;
-            }
-            itDepth++;
-        }
-#else
     if (context->depth2) {
         int w = context->depth2->width;
         int h = context->depth2->height;
@@ -373,7 +289,6 @@ void BoxExtractViewPort::update() {
                 }
             }
     }
-#endif
 }
 
 void FrontCamViewPort::update() {
@@ -391,24 +306,6 @@ void FrontCamViewPort::update() {
 
         glPointSize(1.0f);
         glBegin(GL_POINTS);
-#ifdef KINECT1
-        int w = extractEndX - extractBegX;
-        int h = extractEndY - extractBegY;
-        for (int i = 0; i < w*h; ++i)
-        {
-            if (!context->depthInBoxXYZ[i]) continue;
-
-            glColor4f(1/(((context->depthInBoxXYZ[i]/2) & 0xff) / 100.f),
-                      1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
-                      1/(((context->depthInBoxXYZ[i]/4) & 0xff) / 100.f),
-                      0.7f);
-
-            glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
-                        (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy
-                        context->depthInBoxXYZ[i] );
-
-        }
-#else
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
@@ -426,7 +323,6 @@ void FrontCamViewPort::update() {
 
                     MakeVertex(x, y, context->depthXYZ[i], w, h);
                 }
-#endif
         glEnd();
 
         glBegin(GL_LINES);
@@ -456,24 +352,6 @@ void LeftCamViewPort::update() {
 
         glPointSize(2.0f);
         glBegin(GL_POINTS);
-#ifdef KINECT1
-        int w = extractEndX - extractBegX;
-        int h = extractEndY - extractBegY;
-        for (int i = 0; i < w*h; ++i)
-        {
-            if (!context->depthInBoxXYZ[i]) continue;
-
-            glColor4f(1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
-                      1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
-                      1/((context->depthInBoxXYZ[i] >> 8) / 50.f),
-                      0.7f);
-
-            glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
-                        (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy
-                        context->depthInBoxXYZ[i] );
-
-        }
-#else
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
@@ -491,7 +369,6 @@ void LeftCamViewPort::update() {
 
                     MakeVertex(x, y, context->depthXYZ[i], w, h);
                 }
-#endif
         glEnd();
 
         glBegin(GL_LINES);
@@ -519,23 +396,6 @@ void RightCamViewPort::update() {
 
         glPointSize(2.0f);
         glBegin(GL_POINTS);
-#ifdef KINECT1
-        int w = extractEndX - extractBegX;
-        int h = extractEndY - extractBegY;
-        for (int i = 0; i < w*h; ++i)
-        {
-            if (!context->depthInBoxXYZ[i]) continue;
-
-            glColor4f(1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
-                      1/((context->depthInBoxXYZ[i] & 0xff) / 100.f),
-                      1/((context->depthInBoxXYZ[i] >> 8) / 50.f), 0.7f);
-
-            glVertex3f( (i%w- (w-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // X = (x - cx) * d / fx
-                        (i/w- (h-1)/2.f) * context->depthInBoxXYZ[i] / Context::instance()->f,  // Y = (y - cy) * d / fy
-                        context->depthInBoxXYZ[i] );
-
-        }
-#else
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
@@ -553,7 +413,6 @@ void RightCamViewPort::update() {
 
                     MakeVertex(x, y, context->depthXYZ[i], w, h);
                 }
-#endif
         glEnd();
 
         glBegin(GL_LINES);
