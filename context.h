@@ -5,15 +5,12 @@
 #include <vector>
 
 template <class T> class Vec3;
-#ifdef KINECT1
-class FreenectDevice;
-#else
+
 #include <libfreenect2/libfreenect2.hpp>
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/registration.h>
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
-#endif
 
 class Camera;
 class Context;
@@ -66,16 +63,6 @@ public:
     int height;
     float f;
 
-#ifdef KINECT1
-    FreenectDevice* device;
-
-    std::vector<uint8_t> rgb; //RGB Kinect captured
-    std::vector<uint16_t> depth; //Depth Image Kinect captured
-
-    std::vector<uint8_t> rgbInBoxXY; //RGB in the BOX
-    std::vector<uint8_t> depthImageInBoxXY; //Depth Image in the BOX
-    std::vector<uint16_t> depthInBoxXY; //Depth in the BOX
-#else
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
     libfreenect2::PacketPipeline *pipeline = 0;
@@ -103,8 +90,6 @@ public:
     std::vector<uint16_t> curr_depthXY;
     std::vector<uint8_t> curr_irImageXYZ;
     std::vector<uint16_t> curr_irXYZ;
-
-#endif
 
     std::list<ContextViewPort*> viewports;
     std::list<ContextAction*> actions;

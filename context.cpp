@@ -19,28 +19,16 @@ ContextViewPort::ContextViewPort(int _flags): flags(_flags)
 }
 
 Context::Context()
-#ifdef KINECT1
-    :rgb(640*480*3),
-    depth(640*480)
-#endif
 {
     cam = new Camera;
 
-#ifdef KINECT1
-    width = 640;
-    height = 480;
-
-    boxPos = new Vec3<int>(0,0, 1000);
-    boxDim = new Vec3<int>(150, 200, 150);
-#else
     width = 640;
     height = 480;
 
     boxPos = new Vec3<int>(0,0, 90);
     boxDim = new Vec3<int>(60, 75, 60);
-#endif
-    f = 595.f;
 
+    f = 595.f;
 }
 
 void Context::init(int argc, char **argv)
@@ -51,14 +39,6 @@ void Context::init(int argc, char **argv)
     glutInitWindowSize(width, height);
     glutInitWindowPosition(0, 0);
 
-#ifdef KINECT1
-    device = FreenectDevice::createDevice();
-
-    device->startVideo();
-    device->startDepth();
-
-    freenect_angle = device->getState().getTiltDegs();
-#else
     libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Debug));
 
     serial = freenect2.getDefaultDeviceSerialNumber();
@@ -98,7 +78,6 @@ void Context::init(int argc, char **argv)
 
     undistorted = new libfreenect2::Frame(width, height, 4);
     registered = new libfreenect2::Frame(width, height, 4);
-#endif
 }
 
 
@@ -161,13 +140,8 @@ int Context::initWindow(const char* title)
             //Todo destroy windows
 //            glutDestroyWindow(_instance->window);
 
-#ifdef KINECT1
-            _instance->device->stopDepth();
-            _instance->device->stopVideo();       
-#else
             _instance->dev->stop();
             _instance->dev->close();
-#endif
             exit(0);
         }
 
@@ -204,11 +178,6 @@ void Context::notify(int window) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-#ifdef KINECT1
-    device->getRGB(rgb);
-    device->getDepth(depth);
-#else
-
     bool hasFrame = listener && listener->waitForNewFrame(frames, 10*1000);
     if(hasFrame)
     {
@@ -231,8 +200,6 @@ void Context::notify(int window) {
       listener->release(frames);
       /** libfreenect2::this_thread::sleep_for(libfreenect2::chrono::milliseconds(100)); */
     }
-
-#endif
 
     glFlush();
     glutSwapBuffers();
@@ -286,31 +253,15 @@ void Context::keyPressed(int key, int x, int y)
 //                    freenect_angle++;
 //                    if (freenect_angle > 30)
 //                        freenect_angle = 30;
-//            #ifdef KINECT1
-//                    device->setTiltDegrees(freenect_angle);
-//                    break;
-//            #else
-
-//            #endif
 //                case 'F':
 //                case 'f':
 //                    freenect_angle = 0;
-//            #ifdef KINECT1
-//                    device->setTiltDegrees(freenect_angle);
-//            #else
-
-//            #endif
 //                    break;
 //                case 'V':
 //                case 'v':
 //                    freenect_angle--;
 //                    if (freenect_angle < -30)
 //                        freenect_angle = -30;
-//            #ifdef KINECT1
-//                    device->setTiltDegrees(freenect_angle);
-//            #else
-
-//            #endif
 //                    break;
 
     }
