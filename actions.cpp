@@ -33,15 +33,15 @@ void GenerateUUIDAction::exec(char key) {
 }
 
 void CreateImagesCacheAction::exec(char key) {
-    if (context->rgbImageXY.size()) {
+    if (context->rgbImage.size()) {
         this->context->step = 2;
 
-        context->curr_rgbImageXY = context->rgbImageXY;
-        context->curr_irImageXYZ = context->irImageXYZ;
-        context->curr_depthImageXYZ = context->depthImageXYZ;
-        context->curr_depthXY = context->depthXY;
-        context->curr_depthXYZ = context->depthXYZ;
-        context->curr_irXYZ = context->irXYZ;
+        context->curr_rgbImage = context->rgbImage;
+        context->curr_irImageZ = context->irImageXYZ;
+        context->curr_depthImageZ = context->depthImageZ;
+        context->curr_depth = context->depth;
+        context->curr_depthZ = context->depthZ;
+        context->curr_irZ = context->irXYZ;
     } else
         this->context->step = 1;
 }
@@ -70,33 +70,33 @@ void SaveImagesAction::exec(char key) {
     Json::StyledWriter writer;
 
     Json::Value curr;
-//    if (context->curr_rgbImageXY.size())
+    if (context->curr_rgbImage.size())
     {
-        file = path; file.append("/").append(FILE_BMP_RGB); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_BMP_DEPTH_RGB_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["rgbXY"] = file;
 //        WriteBMPFile(context->curr_rgbImageXY, path, w, h);
     }
-    if (context->curr_irImageXYZ.size()) {
+    if (context->curr_irImageZ.size()) {
         file = path; file.append("/").append(FILE_BMP_IR_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
 //        WriteBMPFile(context->curr_irImageXYZ, path, w, h);
     }
-    if (context->curr_depthImageXYZ.size()) {
+    if (context->curr_depthImageZ.size()) {
         file = path; file.append("/").append(FILE_BMP_DEPTH_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXYZ"] = file;
 //        WriteBMPFile(context->curr_depthImageXYZ, path, w, h);
     }
-    if (context->curr_depthXY.size()) {
+    if (context->curr_depth.size()) {
         file = path; file.append("/").append(FILE_DATA_DEPTH); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXY"] = file;
 //        WriteFile(context->curr_depthXY, path, w, h);
     }
-    if (context->curr_depthXYZ.size()) {
+    if (context->curr_depthZ.size()) {
         file = path; file.append("/").append(FILE_DATA_DEPTH_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depthXYZ"] = file;
 //        WriteFile(context->curr_depthXYZ, path, w, h);
     }
-    if (context->curr_irXYZ.size()) {
+    if (context->curr_irZ.size()) {
         file = path; file.append("/").append(FILE_DATA_IR_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["irXYZ"] = file;
 //        WriteFile(context->curr_irXYZ, path, w, h);

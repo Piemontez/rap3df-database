@@ -80,25 +80,24 @@ public:
     libfreenect2::Frame *ir2{0};
     libfreenect2::Frame *depth2{0};
 
-    std::vector<uint8_t> rgbImageXY; //RGB in the BOX
-    std::vector<uint16_t> depthXY; //Depth in the BOX
+    std::vector<uint8_t> rgbImage; //RGB in the BOX
+    std::vector<uint16_t> depth; //Depth in the BOX
 
     std::vector<uint8_t> irImageXYZ; //Depth Image in the BOX
     std::vector<uint16_t> irXYZ; //Depth Image in the BOX
 
-    std::vector<uint8_t> curr_rgbImageXY;
-    std::vector<uint16_t> curr_depthXY;
-    std::vector<uint8_t> curr_irImageXYZ;
-    std::vector<uint16_t> curr_irXYZ;
+    std::vector<uint8_t> depthImageZ; //Depth Image in the BOX
+    std::vector<uint16_t> depthZ; //Depth in the BOX
+
+    std::vector<uint8_t> curr_rgbImage;
+    std::vector<uint16_t> curr_depth;
+    std::vector<uint8_t> curr_irImageZ;
+    std::vector<uint16_t> curr_irZ;
+    std::vector<uint8_t> curr_depthImageZ;
+    std::vector<uint16_t> curr_depthZ;
 
     std::list<ContextViewPort*> viewports;
     std::list<ContextAction*> actions;
-
-    std::vector<uint8_t> depthImageXYZ; //Depth Image in the BOX
-    std::vector<uint16_t> depthXYZ; //Depth in the BOX
-
-    std::vector<uint8_t> curr_depthImageXYZ;
-    std::vector<uint16_t> curr_depthXYZ;
 
     static Context *instance()
     {

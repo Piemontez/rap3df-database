@@ -88,7 +88,7 @@ void InfoViewPort::update() {
                 if (this->context->currImageType == 0) {
                     s += " Defina o tipo de imagem. Type [f,t,d,l,r,b]";
                 } else {
-                    s += (context->curr_rgbImageXY.size() ? " Com imagens." : " Sem imagens.");
+                    s += (context->curr_rgbImage.size() ? " Com imagens." : " Sem imagens.");
                     s += " Type 2: capture images";
                 }
             }
@@ -228,11 +228,11 @@ void TriangleCamViewPort::update() {
 }
 
 void BoxExtractViewPort::update() {
-    context->rgbImageXY.clear();
+    context->rgbImage.clear();
 
-    context->depthXY.clear();
-    context->depthImageXYZ.clear();
-    context->depthXYZ.clear();
+    context->depth.clear();
+    context->depthImageZ.clear();
+    context->depthZ.clear();
 
     context->irImageXYZ.clear();
     context->irXYZ.clear();
@@ -252,22 +252,22 @@ void BoxExtractViewPort::update() {
 
                     int i = ((y * w) + x) * 4;
 
-                    context->rgbImageXY.push_back(context->registered->data[i+2]);
-                    context->rgbImageXY.push_back(context->registered->data[i+1]);
-                    context->rgbImageXY.push_back(context->registered->data[i+0]);
+                    context->rgbImage.push_back(context->registered->data[i+2]);
+                    context->rgbImage.push_back(context->registered->data[i+1]);
+                    context->rgbImage.push_back(context->registered->data[i+0]);
 
                     uint16_t depth = context->depth2->data[i+2];
-                    context->depthXY.push_back(depth);
+                    context->depth.push_back(depth);
 
                     if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
                             && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
                     {
                         uint16_t depth = context->depth2->data[i+2];
-                        context->depthImageXYZ.push_back(depth & 0xff);
-                        context->depthImageXYZ.push_back(depth >> 8);
-                        context->depthImageXYZ.push_back(0);
+                        context->depthImageZ.push_back(depth & 0xff);
+                        context->depthImageZ.push_back(depth >> 8);
+                        context->depthImageZ.push_back(0);
 
-                        context->depthXYZ.push_back(depth);
+                        context->depthZ.push_back(depth);
 
                         uint16_t ir = context->ir2->data[i+2];
                         context->irImageXYZ.push_back(ir % 255);
@@ -276,10 +276,10 @@ void BoxExtractViewPort::update() {
 
                         context->irXYZ.push_back(ir);
                     } else {
-                        context->depthImageXYZ.push_back(0);
-                        context->depthImageXYZ.push_back(0);
-                        context->depthImageXYZ.push_back(0);
-                        context->depthXYZ.push_back(0);
+                        context->depthImageZ.push_back(0);
+                        context->depthImageZ.push_back(0);
+                        context->depthImageZ.push_back(0);
+                        context->depthZ.push_back(0);
 
                         context->irImageXYZ.push_back(0);
                         context->irImageXYZ.push_back(0);
@@ -309,19 +309,19 @@ void FrontCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthXYZ.size() > (h*w))
+        if (context->depthZ.size() > (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthXYZ[i]) continue;
+                    if (!context->depthZ[i]) continue;
 
-                    glColor3ub( context->rgbImageXY[3*i+0],    // R
-                            context->rgbImageXY[3*i+1],    // G
-                            context->rgbImageXY[3*i+2]);  // B
+                    glColor3ub( context->rgbImage[3*i+0],    // R
+                            context->rgbImage[3*i+1],    // G
+                            context->rgbImage[3*i+2]);  // B
 
-                    MakeVertex(x, y, context->depthXYZ[i], w, h);
+                    MakeVertex(x, y, context->depthZ[i], w, h);
                 }
         glEnd();
 
@@ -355,19 +355,19 @@ void LeftCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthXYZ.size() > (h*w))
+        if (context->depthZ.size() > (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthXYZ[i]) continue;
+                    if (!context->depthZ[i]) continue;
 
-                    glColor3ub( context->rgbImageXY[3*i+0],    // R
-                            context->rgbImageXY[3*i+1],    // G
-                            context->rgbImageXY[3*i+2]);  // A
+                    glColor3ub( context->rgbImage[3*i+0],    // R
+                            context->rgbImage[3*i+1],    // G
+                            context->rgbImage[3*i+2]);  // A
 
-                    MakeVertex(x, y, context->depthXYZ[i], w, h);
+                    MakeVertex(x, y, context->depthZ[i], w, h);
                 }
         glEnd();
 
@@ -399,19 +399,19 @@ void RightCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthXYZ.size() > (h*w))
+        if (context->depthZ.size() > (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthXYZ[i]) continue;
+                    if (!context->depthZ[i]) continue;
 
-                    glColor3ub( context->rgbImageXY[3*i+0],    // R
-                            context->rgbImageXY[3*i+1],    // G
-                            context->rgbImageXY[3*i+2]);  // A
+                    glColor3ub( context->rgbImage[3*i+0],    // R
+                            context->rgbImage[3*i+1],    // G
+                            context->rgbImage[3*i+2]);  // A
 
-                    MakeVertex(x, y, context->depthXYZ[i], w, h);
+                    MakeVertex(x, y, context->depthZ[i], w, h);
                 }
         glEnd();
 
