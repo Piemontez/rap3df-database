@@ -88,7 +88,7 @@ void InfoViewPort::update() {
                 if (this->context->currImageType == 0) {
                     s += " Defina o tipo de imagem. Type [f,t,d,l,r,b]";
                 } else {
-                    s += (context->curr_rgbImage.size() ? " Com imagens." : " Sem imagens.");
+                    s += (context->sel_rgbImage.size() ? " Com imagens." : " Sem imagens.");
                     s += " Type 2: capture images";
                 }
             }
@@ -239,14 +239,14 @@ void TriangleCamViewPort::update() {
 }
 
 void BoxExtractViewPort::update() {
-    context->rgbImage.clear();
+    context->rgbImageBgRm.clear();
 
     context->depth.clear();
-    context->depthImageZ.clear();
-    context->depthZ.clear();
+    context->depthImageBgRm.clear();
+    context->depthDataBgRm.clear();
 
-    context->irImageZ.clear();
-    context->irZ.clear();
+    context->irDataBgRm.clear();
+    context->irImageBgRm.clear();
 
     if (context->_depth) {
         int w = context->_depth->width;
@@ -263,6 +263,7 @@ void BoxExtractViewPort::update() {
 
                     int i = ((y * w) + x) * 4;
 
+                    //RGB
                     context->rgbImage.push_back(context->registered->data[i+2]);
                     context->rgbImage.push_back(context->registered->data[i+1]);
                     context->rgbImage.push_back(context->registered->data[i+0]);
@@ -273,29 +274,43 @@ void BoxExtractViewPort::update() {
                     if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
                             && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
                     {
+                        //Depth extract
                         uint16_t depth = context->_depth->data[i+2];
-                        context->depthImageZ.push_back(depth & 0xff);
-                        context->depthImageZ.push_back(depth >> 8);
-                        context->depthImageZ.push_back(0);
+                        context->depthImageBgRm.push_back(depth & 0xff);
+                        context->depthImageBgRm.push_back(depth >> 8);
+                        context->depthImageBgRm.push_back(0);
 
-                        context->depthZ.push_back(depth);
+                        context->depthDataBgRm.push_back(depth);
 
+                        //IR extract
                         uint16_t ir = context->_ir->data[i+2];
-                        context->irImageZ.push_back(ir % 255);
-                        context->irImageZ.push_back(ir / 255);
-                        context->irImageZ.push_back(0);
+                        context->irImageBgRm.push_back(ir % 255);
+                        context->irImageBgRm.push_back(ir / 255);
+                        context->irImageBgRm.push_back(0);
 
-                        context->irZ.push_back(ir);
+                        context->irDataBgRm.push_back(ir);
+                        //RGB
+                        context->rgbImageBgRm.push_back(context->registered->data[i+2]);
+                        context->rgbImageBgRm.push_back(context->registered->data[i+1]);
+                        context->rgbImageBgRm.push_back(context->registered->data[i+0]);
+
                     } else {
-                        context->depthImageZ.push_back(0);
-                        context->depthImageZ.push_back(0);
-                        context->depthImageZ.push_back(0);
-                        context->depthZ.push_back(0);
+                        //DEPTH
+                        context->depthImageBgRm.push_back(0);
+                        context->depthImageBgRm.push_back(0);
+                        context->depthImageBgRm.push_back(0);
+                        context->depthDataBgRm.push_back(0);
 
-                        context->irImageZ.push_back(0);
-                        context->irImageZ.push_back(0);
-                        context->irImageZ.push_back(0);
-                        context->irZ.push_back(0);
+                        //IR
+                        context->irImageBgRm.push_back(0);
+                        context->irImageBgRm.push_back(0);
+                        context->irImageBgRm.push_back(0);
+                        context->irDataBgRm.push_back(0);
+
+                        //RGB
+                        context->rgbImageBgRm.push_back(0);
+                        context->rgbImageBgRm.push_back(0);
+                        context->rgbImageBgRm.push_back(0);
                     }
                 }
             }
@@ -320,19 +335,19 @@ void FrontCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthZ.size() > (h*w))
+        if (context->depthDataBgRm.size() > (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthZ[i]) continue;
+                    if (!context->depthDataBgRm[i]) continue;
 
-                    glColor3ub( context->rgbImage[3*i+0],    // R
-                            context->rgbImage[3*i+1],    // G
-                            context->rgbImage[3*i+2]);  // B
+                    glColor3ub( context->rgbImageBgRm[3*i+0],    // R
+                            context->rgbImageBgRm[3*i+1],    // G
+                            context->rgbImageBgRm[3*i+2]);  // B
 
-                    MakeVertex(x, y, context->depthZ[i], w, h);
+                    MakeVertex(x, y, context->depthDataBgRm[i], w, h);
                 }
         glEnd();
 
@@ -366,19 +381,19 @@ void LeftCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthZ.size() > (h*w))
+        if (context->depthDataBgRm.size() > (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthZ[i]) continue;
+                    if (!context->depthDataBgRm[i]) continue;
 
-                    glColor3ub( context->rgbImage[3*i+0],    // R
-                            context->rgbImage[3*i+1],    // G
-                            context->rgbImage[3*i+2]);  // A
+                    glColor3ub( context->rgbImageBgRm[3*i+0],    // R
+                            context->rgbImageBgRm[3*i+1],    // G
+                            context->rgbImageBgRm[3*i+2]);  // A
 
-                    MakeVertex(x, y, context->depthZ[i], w, h);
+                    MakeVertex(x, y, context->depthDataBgRm[i], w, h);
                 }
         glEnd();
 
@@ -410,19 +425,19 @@ void RightCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthZ.size() > (h*w))
+        if (context->depthDataBgRm.size() > (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthZ[i]) continue;
+                    if (!context->depthDataBgRm[i]) continue;
 
-                    glColor3ub( context->rgbImage[3*i+0],    // R
-                            context->rgbImage[3*i+1],    // G
-                            context->rgbImage[3*i+2]);  // A
+                    glColor3ub( context->rgbImageBgRm[3*i+0],    // R
+                            context->rgbImageBgRm[3*i+1],    // G
+                            context->rgbImageBgRm[3*i+2]);  // A
 
-                    MakeVertex(x, y, context->depthZ[i], w, h);
+                    MakeVertex(x, y, context->depthDataBgRm[i], w, h);
                 }
         glEnd();
 

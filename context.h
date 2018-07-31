@@ -81,19 +81,21 @@ public:
     libfreenect2::Frame *_ir{0};
     libfreenect2::Frame *_depth{0};
 
-    std::vector<uint8_t> rgbImage;
-    std::vector<uint8_t> irImageZ;
-    std::vector<uint16_t> irZ;
     std::vector<uint16_t> depth;
-    std::vector<uint16_t> depthZ;
-    std::vector<uint8_t> depthImageZ;
 
-    std::vector<uint8_t> curr_rgbImage;
-    std::vector<uint16_t> curr_depth;
-    std::vector<uint8_t> curr_irImageZ;
-    std::vector<uint16_t> curr_irZ;
-    std::vector<uint8_t> curr_depthImageZ;
-    std::vector<uint16_t> curr_depthZ;
+    std::vector<uint8_t> rgbImage;
+    std::vector<uint8_t> irImageBgRm;
+    std::vector<uint8_t> depthImageBgRm;
+    std::vector<uint8_t> rgbImageBgRm;
+    std::vector<uint16_t> irDataBgRm;
+    std::vector<uint16_t> depthDataBgRm;
+
+    std::vector<uint8_t> sel_rgbImage;
+    std::vector<uint8_t> sel_irImageBgRm;
+    std::vector<uint8_t> sel_depthImageBgRm;
+    std::vector<uint8_t> sel_rgbImageBgRm;
+    std::vector<uint16_t> sel_irDataBgRm;
+    std::vector<uint16_t> sel_depthDataBgRm;
 
     std::list<ContextViewPort*> viewports;
     std::list<ContextAction*> actions;
