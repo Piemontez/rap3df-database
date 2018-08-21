@@ -20,8 +20,33 @@
 void MakeVertex(float x, float y, float depth, int w, int h) {
     glVertex3f(x-(w/2), y-(h/2), depth * depthScale);
 }
+void MakeTriangle(int r, int c, int w, int h, unsigned char* data, int canais) {
+    int i = ((r * w) + c) * canais;
+    int j;
+    if (data[i+2] > 0
+            && data[i+6] > 0
+            && data[i+2+(w * 4)] > 0) {
+        j = i;
+        MakeVertex(c, r, data[j+2], w, h);
+        j = i+4;
+        MakeVertex(c+1, r, data[j+2], w, h);
+        j = i+(w * 4);
+        MakeVertex(c, r+1, data[j+2], w, h);
+    }
 
-void BoxCamViewPort::update() {
+    if (data[i+6] > 0
+            && data[i+2+(w * 4)] > 0
+            && data[i+6+(w * 4)] > 0) {
+        j = i+4;
+        MakeVertex(c+1, r, data[j+2], w, h);
+        j = i+(w * 4);
+        MakeVertex(c, r+1, data[j+2], w, h);
+        j = i+(w * 4)+4;
+        MakeVertex(c+1, r+1, data[j+2], w, h);
+    }
+}
+
+void BoxCamViewPort::update(int window) {
 
     Vec3<int>* boxPos = Context::instance()->boxPos;
     Vec3<int>* boxDim = Context::instance()->boxDim;
@@ -57,8 +82,8 @@ void BoxCamViewPort::update() {
     glEnd();
 }
 
-void InfoViewPort::update() {
-    glViewport(0, context->height-30, context->width, context->height);
+void InfoViewPort::update(int window) {
+    glViewport(0, context->height(window)-30, context->width(window), context->height(window));
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -66,7 +91,7 @@ void InfoViewPort::update() {
         glLoadIdentity();
 
 
-        gluOrtho2D(0, context->width, 0.0, context->height);
+        gluOrtho2D(0, context->width(window), 0.0, context->height(window));
         glMatrixMode(GL_MODELVIEW);
         glColor3f(0, 0.0, 0.0);
         glPushMatrix();
@@ -135,10 +160,10 @@ void InfoViewPort::update() {
     glPopMatrix();
 }
 
-void PointCamViewPort::update() {
+void PointCamViewPort::update(int window) {
 
-    glViewport(0, 0, context->width/2, context->height/2);
-    //        glViewport(0, 0, context->width, context->height);
+    glViewport(0, 0, context->width(window)/2, context->height(window)/2);
+    //        glViewport(0, 0, context->width(window), context->height(window));
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -146,7 +171,7 @@ void PointCamViewPort::update() {
         glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
         glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
         glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
-        //            glTranslatef( -context->cam->getXPos()-(context->width/2), -context->cam->getYPos()-(context->height/3), -context->cam->getZPos()+500 );
+        //            glTranslatef( -context->cam->getXPos()-(context->width(window)/2), -context->cam->getYPos()-(context->height(window)/3), -context->cam->getZPos()+500 );
         glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
         glPointSize(1.0f);
@@ -157,18 +182,18 @@ void PointCamViewPort::update() {
             int w = context->_depth->width;
             int h = context->_depth->height;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
+            for (int r = 0; r < (h -1); ++r)
+                for (int c = 0; c < (w -1); ++c)
                 {
-                    int i = ((y * w) + x) * 4;
+                    int i = ((r * w) + c) * 4;
+
+                    const uint8_t *p = reinterpret_cast<uint8_t*>(&context->registered->data[i]);
 
                     if (!context->_rgb->status)
-                        glColor3ub( context->registered->data[i+2],    // R
-                                context->registered->data[i+1],    // G
-                                context->registered->data[i+0]);  // A
+                        glColor3ub( p[2], p[1], p[0]);
 
                     if (!context->_depth->status && context->_depth->data[i+2] > 0)
-                        MakeVertex(x, y, context->_depth->data[i+2], w, h);
+                        MakeVertex(c, r, context->_depth->data[i+2], w, h);
 
                 }
         }
@@ -176,9 +201,9 @@ void PointCamViewPort::update() {
     }
 }
 
-void TriangleCamViewPort::update() {
+void TriangleCamViewPort::update(int window) {
 
-    glViewport(context->width/2, 0, context->width/2, context->height/2);
+    glViewport(context->width(window)/2, 0, context->width(window)/2, context->height(window)/2);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -186,7 +211,7 @@ void TriangleCamViewPort::update() {
         glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
         glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
         glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
-        //            glTranslatef( -context->cam->getXPos()-(context->width/2), -context->cam->getYPos()-(context->height/3), -context->cam->getZPos()+500 );
+        //            glTranslatef( -context->cam->getXPos()-(context->width(window)/2), -context->cam->getYPos()-(context->height(window)/3), -context->cam->getZPos()+500 );
         glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
         glBegin(GL_TRIANGLES);
@@ -196,41 +221,18 @@ void TriangleCamViewPort::update() {
             int h = context->_depth->height;
             int j;
 
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
+            for (int r = 0; r < (h -1); ++r)
+                for (int c = 0; c < (w -1); ++c)
                 {
-                    int i = ((y * w) + x) * 4;
+                    int i = ((r * w) + c) * 4;
+
+                    const uint8_t *p = reinterpret_cast<uint8_t*>(&context->registered->data[i]);
 
                     if (!context->_rgb->status)
-                        glColor3ub( context->registered->data[i+2],    // R
-                                context->registered->data[i+1],    // G
-                                context->registered->data[i+0]);  // A
+                        glColor3ub( p[2], p[1], p[0]);
 
                     if (!context->_depth->status)
-                    {
-                        if (context->_depth->data[i+2] > 0
-                                && context->_depth->data[i+6] > 0
-                                && context->_depth->data[i+2+(w * 4)] > 0) {
-                            j = i;
-                            MakeVertex(x, y, context->_depth->data[j+2], w, h);
-                            j = i+4;
-                            MakeVertex(x+1, y, context->_depth->data[j+2], w, h);
-                            j = i+(w * 4);
-                            MakeVertex(x, y+1, context->_depth->data[j+2], w, h);
-                        }
-
-                        if (context->_depth->data[i+6] > 0
-                                && context->_depth->data[i+2+(w * 4)] > 0
-                                && context->_depth->data[i+6+(w * 4)] > 0) {
-                            j = i+4;
-                            MakeVertex(x+1, y, context->_depth->data[j+2], w, h);
-                            j = i+(w * 4);
-                            MakeVertex(x, y+1, context->_depth->data[j+2], w, h);
-                            j = i+(w * 4)+4;
-                            MakeVertex(x+1, y+1, context->_depth->data[j+2], w, h);
-                        }
-
-                    }
+                        MakeTriangle(r, c, w, h, context->_depth->data, 4);
 
                 }
         }
@@ -238,7 +240,7 @@ void TriangleCamViewPort::update() {
     }
 }
 
-void BoxExtractViewPort::update() {
+void BoxExtractViewPort::update(int window) {
     context->rgbImageBgRm.clear();
 
     context->depth.clear();
@@ -317,39 +319,59 @@ void BoxExtractViewPort::update() {
     }
 }
 
-void FrontCamViewPort::update() {
+void FrontCamViewPort::update(int window) {
 
     if (flags == 1)
-        glViewport(context->width/3, context->height/2, context->width/3, context->height/3);
+        glViewport(context->width(window)/3, context->height(window)/2, context->width(window)/3, context->height(window)/3);
     if (flags == 2)
-        glViewport(context->width/3, 0, context->width/3, context->height);
+        glViewport(context->width(window)/12*3, context->height(window)/2, context->width(window)/2, context->height(window)/2);
+    if (flags == 3)
+        glViewport(context->width(window)/12*3, 0, context->width(window)/2, context->height(window)/2);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     {
         glRotatef(180, 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-        glTranslatef( 0, -0, context->boxDim->getZ() +100);
+        glTranslatef( 0, -0, context->boxDim->getZ() - 100);
 
         glPointSize(1.0f);
-        glBegin(GL_POINTS);
+
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthDataBgRm.size() > (h*w))
-            for (int y = 0; y < (h -1); ++y)
-                for (int x = 0; x < (w -1); ++x)
-                {
-                    int i = ((y * w) + x);
+        if (flags == 3) {
+            glBegin(GL_TRIANGLES);
 
-                    if (!context->depthDataBgRm[i]) continue;
+            if (context->depthDataBgRm.size() >= (h*w))
+                for (int r = 0; r < (h -1); ++r)
+                    for (int c = 0; c < (w -1); ++c)
+                    {
+                        int i = ((r * w) + c);
 
-                    glColor3ub( context->rgbImageBgRm[3*i+0],    // R
-                            context->rgbImageBgRm[3*i+1],    // G
-                            context->rgbImageBgRm[3*i+2]);  // B
+                        const uint8_t *p = reinterpret_cast<uint8_t*>(&context->rgbImageBgRm[3*i]);
+                        glColor3ubv(p); //glColor3ub( p[0], p[1], p[2]);
 
-                    MakeVertex(x, y, context->depthDataBgRm[i], w, h);
-                }
-        glEnd();
+                        unsigned char* data = reinterpret_cast<uint8_t*>(context->depthDataBgRm.data());
+                        MakeTriangle(r, c, w, h, data, 2);
+                    }
+            glEnd();
+        } else {
+            glBegin(GL_POINTS);
+            if (context->depthDataBgRm.size() >= (h*w))
+                for (int r = 0; r < (h -1); ++r)
+                    for (int c = 0; c < (w -1); ++c)
+                    {
+                        int i = ((r * w) + c);
+
+                        if (!context->depthDataBgRm[i]) continue;
+                        glColor3ub( context->rgbImageBgRm[3*i+0],    // R
+                                context->rgbImageBgRm[3*i+1],    // G
+                                context->rgbImageBgRm[3*i+2]);  // B
+
+                        MakeVertex(c, r, context->depthDataBgRm[i], w, h);
+                    }
+            glEnd();
+        }
 
         glBegin(GL_LINES);
         glColor3f(1, 0,  0);
@@ -362,12 +384,12 @@ void FrontCamViewPort::update() {
     }
 }
 
-void LeftCamViewPort::update() {
+void LeftCamViewPort::update(int window) {
 
     if (flags == 1)
-        glViewport(0, context->height/2, context->width/3, context->height/3);
+        glViewport(0, context->height(window)/2, context->width(window)/3, context->height(window)/3);
     if (flags == 2)
-        glViewport(0, 0, context->width/3, context->height);
+        glViewport(0, context->height(window)/3, context->width(window)/3, context->height(window)/3);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -381,7 +403,7 @@ void LeftCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthDataBgRm.size() > (h*w))
+        if (context->depthDataBgRm.size() >= (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
@@ -405,12 +427,12 @@ void LeftCamViewPort::update() {
     }
 }
 
-void RightCamViewPort::update() {
+void RightCamViewPort::update(int window) {
 
     if (flags == 1)
-        glViewport(context->width/3*2, context->height/2, context->width/3, context->height/3);
+        glViewport(context->width(window)/3*2, context->height(window)/2, context->width(window)/3, context->height(window)/3);
     if (flags == 2)
-        glViewport(context->width/3*2, 0, context->width/3, context->height);
+        glViewport(context->width(window)/3*2, context->height(window)/3, context->width(window)/3, context->height(window)/3);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -425,7 +447,7 @@ void RightCamViewPort::update() {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthDataBgRm.size() > (h*w))
+        if (context->depthDataBgRm.size() >= (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {

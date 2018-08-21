@@ -22,13 +22,31 @@ Context::Context()
 {
     cam = new Camera;
 
-    width = 640;
-    height = 480;
+    width1 = 512;
+    height1 = 424;
+    width2 = 512;
+    height2 = 424;
 
-    boxPos = new Vec3<int>(0,0, 90);
+    boxPos = new Vec3<int>(0,0, 180);
     boxDim = new Vec3<int>(60, 75, 60);
 
     f = 595.f;
+}
+
+int Context::width(int window)
+{
+    if (Context::window1 == window)
+        return _instance->width1;
+    else
+        return _instance->width2;
+}
+
+int Context::height(int window)
+{
+    if (Context::window1 == window)
+        return _instance->height1;
+    else
+        return _instance->height2;
 }
 
 void Context::init(int argc, char **argv)
@@ -36,7 +54,7 @@ void Context::init(int argc, char **argv)
     //GLUT START
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutInitWindowSize(width, height);
+    glutInitWindowSize(width1, height1);
     glutInitWindowPosition(0, 0);
 
     libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Debug));
@@ -50,16 +68,9 @@ void Context::init(int argc, char **argv)
     }
 
 //    pipeline = new libfreenect2::CpuPacketPipeline();
-//    pipeline = new libfreenect2::OpenGLPacketPipeline();
-//    dev = freenect2.openDevice(serial, pipeline);
-
-    dev = freenect2.openDevice(serial);
-
-    libfreenect2::Freenect2Device::Config conff;
-    conff.MaxDepth = 2;
-    dev->setConfiguration(conff);
-
-    dev->start();
+    pipeline = new libfreenect2::OpenGLPacketPipeline();
+    dev = freenect2.openDevice(serial, pipeline);
+//    dev = freenect2.openDevice(serial);
 
     int types  = 0;
     types |= libfreenect2::Frame::Color;
@@ -71,13 +82,22 @@ void Context::init(int argc, char **argv)
     dev->setColorFrameListener(listener);
     dev->setIrAndDepthFrameListener(listener);
 
+
+    libfreenect2::Freenect2Device::Config conff;
+    conff.MaxDepth = 2;
+    dev->setConfiguration(conff);
+
+    dev->start();
+
+
     std::cout << "device serial: " << dev->getSerialNumber() << std::endl;
     std::cout << "device firmware: " << dev->getFirmwareVersion() << std::endl;
 
+    /// [registration setup]
     registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
-
-    undistorted = new libfreenect2::Frame(width, height, 4);
-    registered = new libfreenect2::Frame(width, height, 4);
+    undistorted = new libfreenect2::Frame(width1, height1, 4);
+    registered = new libfreenect2::Frame(width1, height1, 4);
+    /// [registration setup]
 }
 
 
@@ -117,17 +137,31 @@ int Context::initWindow(const char* title)
 //        glutPostRedisplay();
 //    });
 
-    glutReshapeFunc([] (int width, int height) {
-        _instance->width = width;
-        _instance->height = height;
+    if (Context::window1)
+        glutReshapeFunc([] (int width, int height) {
+            _instance->width1 = width;
+            _instance->height1 = height;
 
-        glViewport(0, 0, width, height);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(50.0, (float)width / height, 1, 5000.0);
+            glViewport(0, 0, width, height);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            gluPerspective(50.0, (float)width / height, 1, 5000.0);
 
-//        glMatrixMode(GL_MODELVIEW);
-    });
+    //        glMatrixMode(GL_MODELVIEW);
+        });
+
+    if (Context::window2)
+        glutReshapeFunc([] (int width, int height) {
+            _instance->width2 = width;
+            _instance->height2 = height;
+
+            glViewport(0, 0, width, height);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            gluPerspective(50.0, (float)width / height, 1, 5000.0);
+
+    //        glMatrixMode(GL_MODELVIEW);
+        });
 
     glutSpecialFunc([] (int key, int x, int y) {
         std::cout << key <<  " " << x << " " << y << std::endl;
@@ -188,10 +222,9 @@ void Context::notify(int window) {
       registration->apply(_rgb, _depth, undistorted, registered);
     }
 
-
     for (std::list<ContextViewPort*>::iterator it=viewports.begin(); it!=viewports.end(); ++it) {
         if (window == (*it)->window)
-            (*it)->update();
+            (*it)->update(window);
     }
 
 

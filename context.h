@@ -24,7 +24,7 @@ protected:
     int flags;
 public:
     explicit ContextViewPort(int _flags = 0);
-    virtual void update() = 0;
+    virtual void update(int window) = 0;
 
     friend class Context;
     friend class ContextAction;
@@ -60,8 +60,12 @@ public:
     Vec3<int>* boxPos;
     Vec3<int>* boxDim;
 
-    int width;
-    int height;
+    int width(int window);
+    int height(int window);
+    int width1;
+    int height1;
+    int width2;
+    int height2;
     float f;
 
     libfreenect2::Freenect2 freenect2;

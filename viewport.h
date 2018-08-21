@@ -6,7 +6,7 @@
 class BoxCamViewPort: public ContextViewPort
 {
 public:
-    void update();
+    void update(int window);
 };
 
 /*
@@ -15,7 +15,7 @@ public:
 class InfoViewPort: public ContextViewPort
 {
 public:
-    void update();
+    void update(int window);
 };
 
 /*
@@ -24,7 +24,7 @@ public:
 class PointCamViewPort: public ContextViewPort
 {
 public:
-    void update();
+    void update(int window);
 };
 
 
@@ -34,21 +34,22 @@ public:
 class TriangleCamViewPort: public ContextViewPort
 {
 public:
-    void update();
+    explicit TriangleCamViewPort(int _flags): ContextViewPort(_flags) {}
+    void update(int window);
 };
 
 
 class BoxExtractViewPort: public ContextViewPort
 {
 public:
-    void update();
+    void update(int window);
 };
 
 class FrontCamViewPort: public ContextViewPort
 {
 public:
     explicit FrontCamViewPort(int _flags): ContextViewPort(_flags) {}
-    void update();
+    void update(int window);
 };
 
 
@@ -57,14 +58,14 @@ class LeftCamViewPort: public ContextViewPort
 public:
     explicit LeftCamViewPort(int _flags): ContextViewPort(_flags) {}
 
-    void update();
+    void update(int window);
 };
 
 class RightCamViewPort: public ContextViewPort
 {
 public:
     explicit RightCamViewPort(int _flags): ContextViewPort(_flags) {}
-    void update();
+    void update(int window);
 };
 
 #endif // VIEWPORT_H

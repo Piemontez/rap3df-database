@@ -25,7 +25,7 @@ int main(int argc, char **argv)
         context->addViewport(wind, new InfoViewPort);
         {
             context->addViewport(wind, new PointCamViewPort);
-            context->addViewport(wind, new TriangleCamViewPort);
+            context->addViewport(wind, new TriangleCamViewPort(1));
         }
         context->addViewport(wind, new BoxCamViewPort);
 
@@ -41,6 +41,7 @@ int main(int argc, char **argv)
         new LeftCamViewPort(2);
         context->addViewport(wind, new LeftCamViewPort(2));
         context->addViewport(wind, new FrontCamViewPort(2));
+        context->addViewport(wind, new FrontCamViewPort(3));
         context->addViewport(wind, new RightCamViewPort(2));
     }
 
