@@ -69,47 +69,47 @@ void SaveImagesAction::exec(char key) {
     Json::Reader reader;
     Json::StyledWriter writer;
 
+    {//Cria o diretório
+        std::string mkdir = "mkdir -p ";
+        mkdir.append(path);
+        system(mkdir.c_str());
+    }
+
     Json::Value curr;
     if (context->sel_rgbImage.size()) {
-        file = path; file.append("/").append(FILE_BMP_DEPTH_RGB_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
+        file = path; file.append("/").append(FILE_BMP_RGB); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["rgb"] = file;
-        WriteBMPFile(context->sel_rgbImage, path, w, h);
+        WriteBMPFile(context->sel_rgbImage, file, w, h);
     }
     if (context->sel_irImageBgRm.size()) {
         file = path; file.append("/").append(FILE_BMP_IR_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["ir_with_bg"] = file;
-        WriteBMPFile(context->sel_irImageBgRm, path, w, h);
+        WriteBMPFile(context->sel_irImageBgRm, file, w, h);
     }
     if (context->sel_depthImageBgRm.size()) {
         file = path; file.append("/").append(FILE_BMP_DEPTH_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depth_with_bg"] = file;
-        WriteBMPFile(context->sel_depthImageBgRm, path, w, h);
+        WriteBMPFile(context->sel_depthImageBgRm, file, w, h);
     }
     if (context->sel_rgbImageBgRm.size()) {
         file = path; file.append("/").append(FILE_BMP_DEPTH_RGB_BG_RM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["rgb_with_bg"] = file;
-        WriteBMPFile(context->sel_rgbImageBgRm, path, w, h);
+        WriteBMPFile(context->sel_rgbImageBgRm, file, w, h);
     }
     if (context->sel_irDataBgRm.size()) {
         file = path; file.append("/").append(FILE_DATA_IR_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["ir_data_with_bg"] = file;
-        WriteFile(context->sel_irDataBgRm, path, w, h);
+        WriteFile(context->sel_irDataBgRm, file, w, h);
     }
     if (context->sel_depthDataBgRm.size()) {
         file = path; file.append("/").append(FILE_DATA_DEPTH_BG_REM); file.replace(file.find("ID"), 2, fileID.c_str());
         curr["depth_data_with_bg"] = file;
-        WriteFile(context->sel_depthDataBgRm, path, w, h);
+        WriteFile(context->sel_depthDataBgRm, file, w, h);
     }
 
     if (curr.empty()) {
         context->errorCode = 2;
         return;
-    }
-
-    {//Cria o diretório
-        std::string mkdir = "mkdir -p ";
-        mkdir.append(path);
-        system(mkdir.c_str());
     }
 
     {//Carrega o arquivo json
@@ -178,6 +178,8 @@ void SaveImagesAction::exec(char key) {
         }
     }
 
+    this->context->imagesSaved |= this->context->currImageType;
+    std::cout << this->context->imagesSaved << std::endl;
 }
 
 void SetImageTypeAction::exec(char key)
@@ -202,6 +204,10 @@ void SetImageTypeAction::exec(char key)
         case 'b':
             this->context->currImageType = 32;
             break;
+    }
+    if (this->context->step == 2) {
+        this->context->step = 1;
+        this->context->clearSelected();
     }
 }
 

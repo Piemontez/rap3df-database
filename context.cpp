@@ -200,6 +200,17 @@ void Context::start()
     glutMainLoop();
 }
 
+void Context::clearSelected()
+{
+    sel_rgbImage.clear();
+    sel_irImageBgRm.clear();
+    sel_depthImageBgRm.clear();
+    sel_rgbImageBgRm.clear();
+
+    sel_depthDataBgRm.clear();
+    sel_irDataBgRm.clear();
+}
+
 void Context::addViewport(const int window, ContextViewPort* viewport)
 {
     viewport->context = this;

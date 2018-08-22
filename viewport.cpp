@@ -129,12 +129,12 @@ void InfoViewPort::update(int window) {
 
             glRasterPos2i(5, 0);
             s = "Images:";
-            s += ((this->context->currImageType & 1)  ? " X " : (this->context->imagesSaved & 1 > 0) ? " F " : " - "); //Front
-            s += ((this->context->currImageType & 2) ? " X " : (this->context->imagesSaved & 2 > 0) ? " T " : " - "); //Top
-            s += ((this->context->currImageType & 4) ? " X " : (this->context->imagesSaved & 4 > 0) ? " D " : " - "); //Down
-            s += ((this->context->currImageType & 8)  ? " X " : (this->context->imagesSaved & 8 > 0) ? " L " : " - "); //Left
-            s += ((this->context->currImageType & 16) ? " X " : (this->context->imagesSaved & 16 > 0) ? " R " : " - "); //Right
-            s += ((this->context->currImageType & 32) ? " X " : (this->context->imagesSaved & 32 > 0) ? " B " : " - "); //Pocket Lighter
+            s += (this->context->currImageType & 1)  ? " X " : ((this->context->imagesSaved & 1)  > 0 ? " F " : " - "); //Front
+            s += (this->context->currImageType & 2)  ? " X " : ((this->context->imagesSaved & 2)  > 0 ? " T " : " - "); //Top
+            s += (this->context->currImageType & 4)  ? " X " : ((this->context->imagesSaved & 4)  > 0 ? " D " : " - "); //Down
+            s += (this->context->currImageType & 8)  ? " X " : ((this->context->imagesSaved & 8)  > 0 ? " L " : " - "); //Left
+            s += (this->context->currImageType & 16) ? " X " : ((this->context->imagesSaved & 16) > 0 ? " R " : " - "); //Right
+            s += (this->context->currImageType & 32) ? " X " : ((this->context->imagesSaved & 32) > 0 ? " B " : " - "); //Pocket Lighter
             if (context->errorCode) {
                 switch (context->errorCode) {
                 case 1:
@@ -244,6 +244,7 @@ void TriangleCamViewPort::update(int window) {
 }
 
 void BoxExtractViewPort::update(int window) {
+    context->rgbImage.clear();
     context->rgbImageBgRm.clear();
 
     context->depth.clear();
@@ -267,11 +268,16 @@ void BoxExtractViewPort::update(int window) {
                         && (x-(w/2)) < (context->boxPos->getX() +context->boxDim->getX())) {
 
                     int i = ((y * w) + x) * 4;
+                    int ib = ((y * 1920) + (x * 1080/424)) * 4;
+
+//                    std::cout << "rgb   " << context->_rgb->width << " " << context->_rgb->height << " " << context->_rgb->bytes_per_pixel << std::endl;
+//                    std::cout << "depth " << context->_depth->width << " " << context->_depth->height << " " << context->_depth->bytes_per_pixel << std::endl;
 
                     //RGB
-                    context->rgbImage.push_back(context->registered->data[i+2]);
-                    context->rgbImage.push_back(context->registered->data[i+1]);
-                    context->rgbImage.push_back(context->registered->data[i+0]);
+
+                    context->rgbImage.push_back(context->_rgb->data[ib+2]);
+                    context->rgbImage.push_back(context->_rgb->data[ib+1]);
+                    context->rgbImage.push_back(context->_rgb->data[ib+0]);
 
                     uint16_t depth = context->_depth->data[i+2];
                     context->depth.push_back(depth);
@@ -283,14 +289,15 @@ void BoxExtractViewPort::update(int window) {
                         uint16_t depth = context->_depth->data[i+2];
                         context->depthImageBgRm.push_back(depth & 0xff);
                         context->depthImageBgRm.push_back(depth >> 8);
-                        context->depthImageBgRm.push_back(0);
+                        context->depthImageBgRm.push_back(depth & 0xff);
 
                         context->depthDataBgRm.push_back(depth);
 
                         //IR extract
                         uint16_t ir = context->_ir->data[i+2];
-                        context->irImageBgRm.push_back(ir % 255);
-                        context->irImageBgRm.push_back(ir / 255);
+
+                        context->irImageBgRm.push_back(ir & 0xff);
+                        context->irImageBgRm.push_back(ir >> 8);
                         context->irImageBgRm.push_back(0);
 
                         context->irDataBgRm.push_back(ir);

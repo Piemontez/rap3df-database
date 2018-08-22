@@ -114,6 +114,7 @@ public:
     void init(int argc, char **argv);
     int initWindow(const char *title);
     void start();
+    void clearSelected();
 
     void addViewport(const int window, ContextViewPort*);
     void notify(int window);
