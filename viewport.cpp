@@ -113,9 +113,12 @@ void InfoViewPort::update(int window) {
                 if (this->context->currImageType == 0) {
                     s += " Defina o tipo de imagem. Type [f,t,d,l,r,b]";
                 } else {
-                    s += (context->sel_rgbImage.size() ? " Com imagens." : " Sem imagens.");
+                    s += (context->sel_rgbImage.size() ? " With images." : " WithOUT images.");
                     s += " Type 2: capture images";
                 }
+            }
+            if (this->context->step == 2) {
+                s += " Type 9 to save image, or 0 to finish.";
             }
 
             for (std::string::iterator i = s.begin(); i != s.end(); ++i)
@@ -339,37 +342,38 @@ void FrontCamViewPort::update(int window) {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (flags == 3) {
-            glBegin(GL_TRIANGLES);
+        std::vector<uint8_t>* rgb;
+        std::vector<uint16_t>* depth;
 
-            if (context->depthDataBgRm.size() >= (h*w))
-                for (int r = 0; r < (h -1); ++r)
-                    for (int c = 0; c < (w -1); ++c)
-                    {
-                        int i = ((r * w) + c);
-
-                        const uint8_t *p = reinterpret_cast<uint8_t*>(&context->rgbImageBgRm[3*i]);
-                        glColor3ubv(p); //glColor3ub( p[0], p[1], p[2]);
-
-                        unsigned char* data = reinterpret_cast<uint8_t*>(context->depthDataBgRm.data());
-                        MakeTriangle(r, c, w, h, data, 2);
-                    }
-            glEnd();
+        if (context->sel_depthDataBgRm.size()) {
+            depth = &context->sel_depthDataBgRm;
+            rgb = &context->sel_rgbImageBgRm;
         } else {
-            glBegin(GL_POINTS);
-            if (context->depthDataBgRm.size() >= (h*w))
-                for (int r = 0; r < (h -1); ++r)
-                    for (int c = 0; c < (w -1); ++c)
-                    {
-                        int i = ((r * w) + c);
+            depth = &context->depthDataBgRm;
+            rgb = &context->rgbImageBgRm;
+        }
 
-                        if (!context->depthDataBgRm[i]) continue;
-                        glColor3ub( context->rgbImageBgRm[3*i+0],    // R
-                                context->rgbImageBgRm[3*i+1],    // G
-                                context->rgbImageBgRm[3*i+2]);  // B
+        if (depth->size() >= (h*w)) {
+            if (flags == 3)
+                glBegin(GL_TRIANGLES);
+            else
+                glBegin(GL_POINTS);
 
-                        MakeVertex(c, r, context->depthDataBgRm[i], w, h);
+            for (int r = 0; r < (h -1); ++r)
+                for (int c = 0; c < (w -1); ++c)
+                {
+                    int i = ((r * w) + c);
+
+                    const uint8_t *p = reinterpret_cast<uint8_t*>(&(*rgb)[3*i]);
+                    glColor3ubv(p); //glColor3ub( p[0], p[1], p[2]);
+
+                    if (flags == 3) {
+                        unsigned char* data = reinterpret_cast<uint8_t*>(depth->data());
+                        MakeTriangle(r, c, w, h, data, 2);
+                    } else {
+                        MakeVertex(c, r, (*depth)[i], w, h);
                     }
+                }
             glEnd();
         }
 

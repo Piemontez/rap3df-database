@@ -137,19 +137,6 @@ int Context::initWindow(const char* title)
 //        glutPostRedisplay();
 //    });
 
-    if (Context::window1)
-        glutReshapeFunc([] (int width, int height) {
-            _instance->width1 = width;
-            _instance->height1 = height;
-
-            glViewport(0, 0, width, height);
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            gluPerspective(50.0, (float)width / height, 1, 5000.0);
-
-    //        glMatrixMode(GL_MODELVIEW);
-        });
-
     if (Context::window2)
         glutReshapeFunc([] (int width, int height) {
             _instance->width2 = width;
@@ -162,34 +149,48 @@ int Context::initWindow(const char* title)
 
     //        glMatrixMode(GL_MODELVIEW);
         });
+    else if (Context::window1)
+        glutReshapeFunc([] (int width, int height) {
+            _instance->width1 = width;
+            _instance->height1 = height;
 
-    glutSpecialFunc([] (int key, int x, int y) {
-        std::cout << key <<  " " << x << " " << y << std::endl;
+            glViewport(0, 0, width, height);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            gluPerspective(50.0, (float)width / height, 1, 5000.0);
 
-        _instance->keyPressed(key,x,y);
-    });
+    //        glMatrixMode(GL_MODELVIEW);
+        });
 
-    glutKeyboardFunc([] (unsigned char key, int x, int y) {
-        if (key == 0x1B) {// ESC
-            //Todo destroy windows
-//            glutDestroyWindow(_instance->window);
+    if (Context::window1 == currwindow) {
+        glutSpecialFunc([] (int key, int x, int y) {
+            std::cout << key <<  " " << x << " " << y << std::endl;
 
-            _instance->dev->stop();
-            _instance->dev->close();
-            exit(0);
-        }
+            _instance->keyPressed(key,x,y);
+        });
 
-        _instance->keyPressed(key,x,y);
-    });
+        glutKeyboardFunc([] (unsigned char key, int x, int y) {
+            if (key == 0x1B) {// ESC
+                //Todo destroy windows
+    //            glutDestroyWindow(_instance->window);
 
-    glutMotionFunc([] (int x, int y) {
-        _instance->cam->handleMouseMove(x, y);
-    });
+                _instance->dev->stop();
+                _instance->dev->close();
+                exit(0);
+            }
 
-    glutMouseFunc([] (int button, int state, int x, int y)
-    {
-        _instance->cam->mouseButtonPressed(button, state, x, y);
-    });
+            _instance->keyPressed(key,x,y);
+        });
+
+        glutMotionFunc([] (int x, int y) {
+            _instance->cam->handleMouseMove(x, y);
+        });
+
+        glutMouseFunc([] (int button, int state, int x, int y)
+        {
+            _instance->cam->mouseButtonPressed(button, state, x, y);
+        });
+    }
 
     return currwindow;
 }
