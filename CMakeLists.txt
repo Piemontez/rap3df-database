@@ -33,19 +33,28 @@ find_package(GLUT)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP jsoncpp)
 
+
+include_directories(. ${freenect2_INCLUDE_DIR})
+
 if (OPENGL_FOUND AND GLUT_FOUND)
-  include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR} ${freenect2_INCLUDE_DIR})
+  include_directories(. ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIR})
 
-#  add_executable(rap3df-viewer main_viewer.cpp)
-  add_executable(rap3df-acquisition main.cpp context.cpp actions.cpp freenectdevice.cpp camera.cpp utils.cpp viewport.cpp)
+  add_executable(rap3df-viewer main_viewer.cpp)
+  add_executable(rap3df-acquisition
+      main.cpp
+      context.cpp
+      actions.cpp
+      freenectdevice.cpp
+      camera.cpp
+      utils.cpp
+      viewport.cpp)
 
-#  target_link_libraries(rap3df-viewer
-#
-#      #freenect
-#
-#      ${OPENGL_LIBRARIES}
-#      ${GLUT_LIBRARY}
-#      ${JSONCPP_LIBRARIES})
+  target_link_libraries(rap3df-viewer
+      #freenect
+
+      ${OPENGL_LIBRARIES}
+      ${GLUT_LIBRARY}
+      ${JSONCPP_LIBRARIES})
 
   target_link_libraries(rap3df-acquisition
       #freenect
@@ -58,6 +67,6 @@ if (OPENGL_FOUND AND GLUT_FOUND)
       ${GLUT_LIBRARY}
       ${JSONCPP_LIBRARIES})
 
-  #install(TARGETS rap3df-viewer DESTINATION bin)
+  install(TARGETS rap3df-viewer DESTINATION bin)
   install(TARGETS rap3df-acquisition DESTINATION bin)
 endif()

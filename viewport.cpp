@@ -257,23 +257,26 @@ void BoxExtractViewPort::update(int window) {
     if (context->_depth) {
         int w = context->_depth->width;
         int h = context->_depth->height;
+        int bp = context->_depth->bytes_per_pixel;
+
+        int r_w = context->_rgb->width;
+        int r_h = context->_rgb->height;
+        int r_bp = context->_rgb->bytes_per_pixel;
+
 
         for (int y = 0; y < (h -1); ++y)
             for (int x = 0; x < (w -1); ++x)
             {
 
+                //Todo: mover para valor inical de y e x
                 if ((y-(h/2)) > -context->boxDim->getY()
                         && (y-(h/2)) < +context->boxDim->getY()
                         && (x-(w/2)) > (context->boxPos->getX() -context->boxDim->getX())
-                        && (x-(w/2)) < (context->boxPos->getX() +context->boxDim->getX())) {
+                        && (x-(w/2)) < (context->boxPos->getX() +context->boxDim->getX()))
+                {
 
-                    int i = ((y * w) + x) * 4;
-                    int ib = ((y * 1920) + (x * 1080/424)) * 4;
-
-//                    std::cout << "rgb   " << context->_rgb->width << " " << context->_rgb->height << " " << context->_rgb->bytes_per_pixel << std::endl;
-//                    std::cout << "depth " << context->_depth->width << " " << context->_depth->height << " " << context->_depth->bytes_per_pixel << std::endl;
-
-                    //RGB
+                    int i  = ((y*w)  + x) * bp;
+                    int ib = (((int)(y*r_h/(float)h) * r_w) + (int)(x*r_w/(float)w)) * r_bp;
 
                     context->rgbImage.push_back(context->_rgb->data[ib+2]);
                     context->rgbImage.push_back(context->_rgb->data[ib+1]);
@@ -282,8 +285,8 @@ void BoxExtractViewPort::update(int window) {
                     uint16_t depth = context->_depth->data[i+2];
                     context->depth.push_back(depth);
 
-                    if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
-                            && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
+//                    if ((depth * depthScale) > (context->boxPos->getZ() - context->boxDim->getZ())
+//                            && (depth * depthScale) < (context->boxPos->getZ() + context->boxDim->getZ()))
                     {
                         //Depth extract
                         uint16_t depth = context->_depth->data[i+2];
@@ -306,7 +309,7 @@ void BoxExtractViewPort::update(int window) {
                         context->rgbImageBgRm.push_back(context->registered->data[i+1]);
                         context->rgbImageBgRm.push_back(context->registered->data[i+0]);
 
-                    } else {
+                    }/* else {
                         //DEPTH
                         context->depthImageBgRm.push_back(0);
                         context->depthImageBgRm.push_back(0);
@@ -323,7 +326,7 @@ void BoxExtractViewPort::update(int window) {
                         context->rgbImageBgRm.push_back(0);
                         context->rgbImageBgRm.push_back(0);
                         context->rgbImageBgRm.push_back(0);
-                    }
+                    }*/
                 }
             }
     }
@@ -414,19 +417,29 @@ void LeftCamViewPort::update(int window) {
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthDataBgRm.size() >= (h*w))
+        std::vector<uint8_t>* rgb;
+        std::vector<uint16_t>* depth;
+
+        if (context->sel_depthDataBgRm.size()) {
+            depth = &context->sel_depthDataBgRm;
+            rgb = &context->sel_rgbImageBgRm;
+        } else {
+            depth = &context->depthDataBgRm;
+            rgb = &context->rgbImageBgRm;
+        }
+
+        if (depth->size() >= (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthDataBgRm[i]) continue;
+                    if (!(*depth)[i]) continue;
 
-                    glColor3ub( context->rgbImageBgRm[3*i+0],    // R
-                            context->rgbImageBgRm[3*i+1],    // G
-                            context->rgbImageBgRm[3*i+2]);  // A
+                    const uint8_t *p = reinterpret_cast<uint8_t*>(&(*rgb)[3*i]);
+                    glColor3ubv(p); //glColor3ub( p[0], p[1], p[2]);
 
-                    MakeVertex(x, y, context->depthDataBgRm[i], w, h);
+                    MakeVertex(x, y, (*depth)[i], w, h);
                 }
         glEnd();
 
@@ -455,23 +468,35 @@ void RightCamViewPort::update(int window) {
 
         glPointSize(2.0f);
         glBegin(GL_POINTS);
+
         int w = context->boxDim->getX() * 2 - 1;
         int h = context->boxDim->getY() * 2 - 1;
 
-        if (context->depthDataBgRm.size() >= (h*w))
+        std::vector<uint8_t>* rgb;
+        std::vector<uint16_t>* depth;
+
+        if (context->sel_depthDataBgRm.size()) {
+            depth = &context->sel_depthDataBgRm;
+            rgb = &context->sel_rgbImageBgRm;
+        } else {
+            depth = &context->depthDataBgRm;
+            rgb = &context->rgbImageBgRm;
+        }
+
+        if (depth->size() >= (h*w))
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
                     int i = ((y * w) + x);
 
-                    if (!context->depthDataBgRm[i]) continue;
+                    if (!(*depth)[i]) continue;
 
-                    glColor3ub( context->rgbImageBgRm[3*i+0],    // R
-                            context->rgbImageBgRm[3*i+1],    // G
-                            context->rgbImageBgRm[3*i+2]);  // A
+                    const uint8_t *p = reinterpret_cast<uint8_t*>(&(*rgb)[3*i]);
+                    glColor3ubv(p); //glColor3ub( p[0], p[1], p[2]);
 
-                    MakeVertex(x, y, context->depthDataBgRm[i], w, h);
+                    MakeVertex(x, y, (*depth)[i], w, h);
                 }
+
         glEnd();
 
         glBegin(GL_LINES);
