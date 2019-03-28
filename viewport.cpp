@@ -121,7 +121,10 @@ void InfoViewPort::update(int window) {
                 s += " Type 9 to save image, 3 to get demographic data, or 0 to finish.";
                 break;
             case STEP_DEMOGRAPHI:
-                s += " Collecting of demographic data. Type - to close.";
+                s += " Collecting of demographic data. Type \"-\" to close.";
+                if (this->context->demographicStep == STEP_DEMOG_COLOR) {
+                    s += " Colors: 1 BRANCA, 2 PRETA, 3 PARDA, 4 AMARELA, 5 INDÍGENA.";
+                }
                 break;
             case STEP_FINISHED:
                 s += " Liberado para coletar novos dados. Type 1: start";
@@ -174,21 +177,16 @@ void InfoViewPort::update(int window) {
                 s = "";
                 switch(this->context->demographicStep)
                 {
-                case 4:
-                    s+= "Height:" + this->context->demographicHeight;
-                    break;
-                case 3:
-                    s+= "Weight:" + this->context->demographicWeight;
-                    break;
-                case 2:
-                    s+= "Color:" + this->context->demographicColor;
-                    break;
-                case 1:
-                    s+= "Gender:" + this->context->demographicGender;
-                    break;
-                case 0:
+                case STEP_DEMOG_HEIGHT:
+                    s+= "Height:" + this->context->demographicHeight + "  ";
+                case STEP_DEMOG_WEIGHT:
+                    s+= "Weight:" + this->context->demographicWeight + "  ";
+                case STEP_DEMOG_COLOR:
+                    s+= "Color:" + this->context->demographicColor + "  ";
+                case STEP_DEMOG_GENDER:
+                    s+= "Gender:" + this->context->demographicGender + "  ";
+                case STEP_DEMOG_YEAR:
                     s+= "Years:" + this->context->demographicYaers;
-                    break;
                 }
 
 

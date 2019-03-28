@@ -70,7 +70,7 @@ public:
     int currImageType{0};
     int errorCode{0}; //1 ,2: Nenhuma imagem capturada
 
-    int demographicStep{0};
+    int demographicStep{STEP_DEMOG_NONE};
     std::string demographicYaers;
     std::string demographicGender;
     std::string demographicColor;
@@ -141,7 +141,7 @@ public:
     void addViewport(const int window, ContextViewPort*);
     void notify(int window);
 
-    void addAction(const unsigned char k, ContextAction* action, int step = STEP_NONE);
+    void addAction(const unsigned char k, ContextAction* action, int step = 0);
 
     void keyPressed(int key, int x, int y);
     void keyPressed(unsigned char key, int x, int y);

@@ -225,23 +225,46 @@ void SetImageTypeAction::exec(char key)
 
 void SetDemograpichInfoAction::exec(char key)
 {
-    switch (this->context->demographicStep) {
-    case STEP_DEMOG_YEAR:
-        this->context->demographicGender += "sss";
-        break;
-    case STEP_DEMOG_GENDER:
-        if (key == 'f' || key == 'm') {
-            this->context->demographicGender = key;
+    std::cout << "->>>>" << this->context->demographicStep  << ' ' << key << std::endl;
+
+    if (key == 0x0d) {
+        this->context->demographicStep++;
+    } else {
+        switch (this->context->demographicStep) {
+        case STEP_DEMOG_YEAR:
+            this->context->demographicYaers += key;
+            break;
+        case STEP_DEMOG_GENDER:
+            if (key == 'f' || key == 'm') {
+                this->context->demographicGender = key;
+            }
+            break;
+        case STEP_DEMOG_COLOR:
+            switch (key) {
+            case '1':
+                this->context->demographicColor = "branca";
+                break;
+            case '2':
+                this->context->demographicColor = "preta";
+                break;
+            case '3':
+                this->context->demographicColor = "parda";
+                break;
+            case '4':
+                this->context->demographicColor = "amarela";
+                break;
+            case '5':
+                this->context->demographicColor = "indigena";
+                break;
+            }
+            break;
+        case STEP_DEMOG_WEIGHT:
+            this->context->demographicWeight += key;
+            break;
+        case STEP_DEMOG_HEIGHT:
+            this->context->demographicHeight += key;
+            break;
         }
-        break;
-    case STEP_DEMOG_COLOR:
-        break;
-    case STEP_DEMOG_WEIGHT:
-        this->context->demographicWeight+= key;
-        break;
-    case STEP_DEMOG_HEIGHT:
-        this->context->demographicHeight += key;
-        break;
     }
 }
 
@@ -249,6 +272,11 @@ void SetDemograpichInfoAction::exec(char key)
 
 void EnableNewDataCollectionAction::exec(char)
 {
+    if (this->context->demographicStep != STEP_DEMOG_NONE) {
+        this->context->demographicStep = STEP_DEMOG_NONE;
+
+    }
+
     this->context->step = STEP_FINISHED;
     this->context->currImageType = 0;
     this->context->imagesSaved = 0;
@@ -258,7 +286,7 @@ void EnableNewDataCollectionAction::exec(char)
 void StartDemographicDataAction::exec(char) {
     if (this->context->step > STEP_NONE) {
         this->context->step = STEP_DEMOGRAPHI;
-        this->context->demographicStep = STEP_DEMOG_NONE;
+        this->context->demographicStep = STEP_DEMOG_YEAR;
 
         this->context->sel_depthImageBgRm.clear();
         this->context->sel_rgbImage.clear();

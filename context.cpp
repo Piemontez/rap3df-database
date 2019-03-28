@@ -164,8 +164,6 @@ int Context::initWindow(const char* title)
 
     if (Context::window1 == currwindow) {
         glutSpecialFunc([] (int key, int x, int y) {
-            std::cout << key <<  " " << x << " " << y << std::endl;
-
             _instance->keyPressed(key,x,y);
         });
 
@@ -323,9 +321,10 @@ void Context::keyPressed(unsigned char key, int x, int y)
     cam->holdingLeftStrafe = false;
 
     for (std::list<ContextAction*>::iterator it=actions.begin(); it!=actions.end(); it++) {
-        if (((*it)->key == key || (*it)->key == '*')
-            && (!(*it)->step || ((*it)->step & step) > 0))
+        if (((*it)->key == key || (*it)->key == '*') && (!(*it)->step || ((*it)->step & step) > 0)) {
             (*it)->exec(key);
+            break;
+        }
     }
 }
 
