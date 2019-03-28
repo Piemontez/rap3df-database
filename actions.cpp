@@ -134,6 +134,7 @@ void SaveImagesAction::exec(char key) {
     {
         root["_faces"].append(uuid);
 
+        images["demography"];
         images["front"];
         images["left"];
         images["right"];
@@ -229,6 +230,19 @@ void SetDemograpichInfoAction::exec(char key)
 
     if (key == 0x0d) {
         this->context->demographicStep++;
+    } else if (key == 0x08 || key == 0x1b) {
+        switch (this->context->demographicStep) {
+        case STEP_DEMOG_YEAR:
+            this->context->demographicYaers = "";
+            break;
+        case STEP_DEMOG_WEIGHT:
+            this->context->demographicWeight = "";
+            break;
+        case STEP_DEMOG_HEIGHT:
+            this->context->demographicHeight = "";
+            break;
+
+        }
     } else {
         switch (this->context->demographicStep) {
         case STEP_DEMOG_YEAR:
@@ -274,6 +288,77 @@ void EnableNewDataCollectionAction::exec(char)
 {
     if (this->context->demographicStep != STEP_DEMOG_NONE) {
         this->context->demographicStep = STEP_DEMOG_NONE;
+
+
+        const std::string &uuid = this->context->uuid;
+
+        std::string path;
+        path.append(IMAGES_DIR).append("/").append(uuid);
+        std::string csvFilePath;
+        csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
+        std::string file;
+
+        Json::Value root;
+        Json::Reader reader;
+        Json::StyledWriter writer;
+
+        {//Cria o diretório
+            std::string mkdir = "mkdir -p ";
+            mkdir.append(path);
+            system(mkdir.c_str());
+        }
+
+        {//Carrega o arquivo json
+            std::FILE * csvFile;
+            csvFile = std::fopen(csvFilePath.c_str(),"r");
+
+            std::string json;
+            if (csvFile) {
+                char buf[2];
+                while (std::fgets(buf, sizeof buf, csvFile) != NULL) {
+                    json.push_back(buf[0]);
+                }
+                std::fclose(csvFile);
+            }
+            std::cout << json << std::endl;
+
+            reader.parse(json, root);
+        }
+
+        Json::Value demographi;
+        if (root[uuid].empty() || root[uuid]["demography"].empty())
+        {
+            root[uuid]["demography"]["yaers"];
+            root[uuid]["demography"]["gender"];
+            root[uuid]["demography"]["color"];
+            root[uuid]["demography"]["weight"];
+            root[uuid]["demography"]["height"];
+        } else {
+            demographi= root[uuid]["demography"];
+        }
+
+        root[uuid]["demography"]["yaers"] = this->context->demographicYaers;
+        root[uuid]["demography"]["gender"] = this->context->demographicGender;
+        root[uuid]["demography"]["color"] = this->context->demographicColor;
+        root[uuid]["demography"]["weight"] = this->context->demographicWeight;
+        root[uuid]["demography"]["height"] = this->context->demographicHeight;
+
+        {//Save json database info
+            std::cout << root << std::endl;
+
+            std::FILE * csvFile;
+            csvFile = std::fopen(csvFilePath.c_str(),"w+");
+            if (csvFile) {
+                std::fputs(writer.write( root ).c_str(),csvFile);
+                std::fclose(csvFile);
+            }
+        }
+
+        this->context->demographicYaers = "";
+        this->context->demographicGender = "";
+        this->context->demographicColor = "";
+        this->context->demographicWeight = "";
+        this->context->demographicHeight = "";
 
     }
 
