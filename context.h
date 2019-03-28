@@ -30,6 +30,13 @@ const int STEP_DEMOG_COLOR  = 3;
 const int STEP_DEMOG_WEIGHT = 4;
 const int STEP_DEMOG_HEIGHT = 5;
 
+const int IMAGE_TYPE_FRONT  = 1;
+const int IMAGE_TYPE_UP     = 2;
+const int IMAGE_TYPE_DOWN   = 4;
+const int IMAGE_TYPE_LEFT   = 8;
+const int IMAGE_TYPE_RIGHT  = 16;
+const int IMAGE_TYPE_BURNED = 32;
+
 class ContextViewPort
 {
 protected:

@@ -136,32 +136,32 @@ void SaveImagesAction::exec(char key) {
 
         images["demography"];
         images["front"];
+        images["up"];
+        images["down"];
         images["left"];
         images["right"];
-        images["top"];
-        images["down"];
     } else {
         images = root[uuid];
     }
 
 
     switch (context->currImageType) {
-    case 1://Front
+    case IMAGE_TYPE_FRONT://Front
         images["front"].append(curr);
         break;
-    case 2://Top
-        images["top"].append(curr);
+    case IMAGE_TYPE_UP://Up
+        images["up"].append(curr);
         break;
-    case 4://Down
+    case IMAGE_TYPE_DOWN://Down
         images["down"].append(curr);
         break;
-    case 8://Left
+    case IMAGE_TYPE_LEFT://Left
         images["left"].append(curr);
         break;
-    case 16://Right
+    case IMAGE_TYPE_RIGHT://Right
         images["right"].append(curr);
         break;
-    case 32://Burned
+    case IMAGE_TYPE_BURNED://Burned
         images["burned"].append(curr);
         break;
     }
@@ -200,22 +200,22 @@ void SetImageTypeAction::exec(char key)
     switch (key)
     {
         case 'f':
-            this->context->currImageType = 1;
+            this->context->currImageType = IMAGE_TYPE_FRONT;
             break;
-        case 't':
-            this->context->currImageType = 2;
+        case 'u':
+            this->context->currImageType = IMAGE_TYPE_UP;
             break;
         case 'd':
-            this->context->currImageType = 4;
+            this->context->currImageType = IMAGE_TYPE_DOWN;
             break;
         case 'l':
-            this->context->currImageType = 8;
+            this->context->currImageType = IMAGE_TYPE_LEFT;
             break;
         case 'r':
-            this->context->currImageType = 16;
+            this->context->currImageType = IMAGE_TYPE_RIGHT;
             break;
         case 'b':
-            this->context->currImageType = 32;
+            this->context->currImageType = IMAGE_TYPE_BURNED;
             break;
     }
     if (this->context->step == STEP_CACHE_IMAGE) {
@@ -226,8 +226,6 @@ void SetImageTypeAction::exec(char key)
 
 void SetDemograpichInfoAction::exec(char key)
 {
-    std::cout << "->>>>" << this->context->demographicStep  << ' ' << key << std::endl;
-
     if (key == 0x0d) {
         this->context->demographicStep++;
     } else if (key == 0x08 || key == 0x1b) {

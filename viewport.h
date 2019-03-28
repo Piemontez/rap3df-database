@@ -10,9 +10,18 @@ public:
 };
 
 /*
- * Display cam position info
+ * Display info
  */
 class InfoViewPort: public ContextViewPort
+{
+public:
+    void update(int window);
+};
+
+/*
+ * Display info 2
+ */
+class InfoVoluntaryViewPort: public ContextViewPort
 {
 public:
     void update(int window);

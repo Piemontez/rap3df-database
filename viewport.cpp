@@ -145,12 +145,12 @@ void InfoViewPort::update(int window) {
                 if (this->context->imagesSaved == 63) {
                     s += "<       CONCLUDED      >";
                 } else {
-                    s += "F"; s += (this->context->imagesSaved & 1)  > 0 ? "x" : "-"; s += (this->context->currImageType & 1)  ? "< " : "  ";//Front
-                    s += "T"; s += (this->context->imagesSaved & 2)  > 0 ? "x" : "-"; s += (this->context->currImageType & 2)  ? "< " : "  ";//Top
-                    s += "D"; s += (this->context->imagesSaved & 4)  > 0 ? "x" : "-"; s += (this->context->currImageType & 4)  ? "< " : "  ";//Down
-                    s += "L"; s += (this->context->imagesSaved & 8)  > 0 ? "x" : "-"; s += (this->context->currImageType & 8)  ? "< " : "  ";//Left
-                    s += "R"; s += (this->context->imagesSaved & 16) > 0 ? "x" : "-"; s += (this->context->currImageType & 16) ? "< " : "  ";//Right
-                    s += "B"; s += (this->context->imagesSaved & 32) > 0 ? "x" : "-"; s += (this->context->currImageType & 32) ? "< " : "  ";//Pocket Lighter
+                    s += "F"; s += (this->context->imagesSaved & IMAGE_TYPE_FRONT)  > 0 ? "x" : "-"; s += (this->context->currImageType & IMAGE_TYPE_FRONT)  ? "< " : "  ";//Front
+                    s += "U"; s += (this->context->imagesSaved & IMAGE_TYPE_UP)     > 0 ? "x" : "-"; s += (this->context->currImageType & IMAGE_TYPE_UP)     ? "< " : "  ";//Up
+                    s += "D"; s += (this->context->imagesSaved & IMAGE_TYPE_DOWN)   > 0 ? "x" : "-"; s += (this->context->currImageType & IMAGE_TYPE_DOWN)   ? "< " : "  ";//Down
+                    s += "L"; s += (this->context->imagesSaved & IMAGE_TYPE_LEFT)   > 0 ? "x" : "-"; s += (this->context->currImageType & IMAGE_TYPE_LEFT)   ? "< " : "  ";//Left
+                    s += "R"; s += (this->context->imagesSaved & IMAGE_TYPE_RIGHT)  > 0 ? "x" : "-"; s += (this->context->currImageType & IMAGE_TYPE_RIGHT)  ? "< " : "  ";//Right
+                    s += "B"; s += (this->context->imagesSaved & IMAGE_TYPE_BURNED) > 0 ? "x" : "-"; s += (this->context->currImageType & IMAGE_TYPE_BURNED) ? "< " : "  ";//Pocket Lighter
                 }
                 if (context->errorCode) {
                     switch (context->errorCode) {
@@ -195,6 +195,72 @@ void InfoViewPort::update(int window) {
                     char c = *i;
                     glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
                 }
+            }
+
+            glMatrixMode(GL_MODELVIEW);
+        }
+        glPopMatrix();
+
+        glMatrixMode(GL_PROJECTION);
+    }
+    glPopMatrix();
+}
+
+
+void InfoVoluntaryViewPort::update(int window)
+{
+    glViewport(0, context->height(window)-30, context->width(window), context->height(window));
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    {
+        glLoadIdentity();
+
+        gluOrtho2D(0, context->width(window), 0.0, context->height(window));
+        glMatrixMode(GL_MODELVIEW);
+        glColor3f(0, 0.0, 0.0);
+        glPushMatrix();
+        {
+            glLoadIdentity();
+
+            glRasterPos2i(5, 15);
+            std::string s;
+
+            if ((this->context->step & (STEP_START | STEP_CACHE_IMAGE)) > 0) {
+                int images = 0;
+
+                if (this->context->imagesSaved & IMAGE_TYPE_FRONT) images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_UP)    images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_DOWN)  images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_LEFT)  images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_RIGHT) images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_DOWN)  images++;
+
+                if (this->context->currImageType)
+                    images++;
+                s += std::to_string(images);
+            } else {
+                s += "0";
+            }
+            s += " / 6";
+
+            if (this->context->imagesSaved & 63)
+                s += " Finished";
+            else
+                switch (this->context->currImageType) {
+                case IMAGE_TYPE_FRONT:  s += " Look foward"; break;
+                case IMAGE_TYPE_UP:     s += " Look up"; break;
+                case IMAGE_TYPE_DOWN:   s += " Look down"; break;
+                case IMAGE_TYPE_LEFT:   s += " Look left"; break;
+                case IMAGE_TYPE_RIGHT:  s += " Look right"; break;
+                case IMAGE_TYPE_BURNED: s += " Look foward"; break;
+                }
+
+
+            for (std::string::iterator i = s.begin(); i != s.end(); ++i)
+            {
+                char c = *i;
+                glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
             }
 
             glMatrixMode(GL_MODELVIEW);

@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     context->addAction('0', new EnableNewDataCollectionAction, STEP_IMAGES_STEPS);
 
     context->addAction('f', new SetImageTypeAction, STEP_START | STEP_CACHE_IMAGE);
-    context->addAction('t', new SetImageTypeAction, STEP_START | STEP_CACHE_IMAGE);
+    context->addAction('u', new SetImageTypeAction, STEP_START | STEP_CACHE_IMAGE);
     context->addAction('d', new SetImageTypeAction, STEP_START | STEP_CACHE_IMAGE);
     context->addAction('l', new SetImageTypeAction, STEP_START | STEP_CACHE_IMAGE);
     context->addAction('r', new SetImageTypeAction, STEP_START | STEP_CACHE_IMAGE);
@@ -41,6 +41,7 @@ int main(int argc, char **argv)
     {
         int wind= context->initWindow("RAP3DF");
 
+        context->addViewport(wind, new InfoVoluntaryViewPort);
         new LeftCamViewPort(2);
         context->addViewport(wind, new LeftCamViewPort(2));
         context->addViewport(wind, new FrontCamViewPort(2));
