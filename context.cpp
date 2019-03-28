@@ -250,10 +250,11 @@ void Context::notify(int window) {
     glutSwapBuffers();
 }
 
-void Context::addAction(const unsigned char key, ContextAction* action)
+void Context::addAction(const unsigned char key, ContextAction* action, int step)
 {
     action->context = this;
     action->key = key;
+    action->step = step;
     actions.push_back(action);
 }
 
@@ -322,7 +323,8 @@ void Context::keyPressed(unsigned char key, int x, int y)
     cam->holdingLeftStrafe = false;
 
     for (std::list<ContextAction*>::iterator it=actions.begin(); it!=actions.end(); it++) {
-        if ((*it)->key == key)
+        if (((*it)->key == key || (*it)->key == '*')
+            && (!(*it)->step || ((*it)->step & step) > 0))
             (*it)->exec(key);
     }
 }

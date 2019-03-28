@@ -25,16 +25,16 @@ std::string UUID(int size = 7) {
 }
 
 
-void GenerateUUIDAction::exec(char key) {
-    if (!this->context->step || this->context->step == -1) {
-        this->context->step = 1;
+void GenerateUUIDAction::exec(char) {
+    if (this->context->step == STEP_NONE || this->context->step == STEP_FINISHED) {
+        this->context->step = STEP_START;
         this->context->uuid = UUID();
     }
 }
 
-void CreateImagesCacheAction::exec(char key) {
+void CreateImagesCacheAction::exec(char) {
     if (context->rgbImageBgRm.size()) {
-        this->context->step = 2;
+        this->context->step = STEP_CACHE_IMAGE;
 
         context->sel_rgbImage = context->rgbImage;
         context->sel_irImageBgRm = context->irImageBgRm;
@@ -44,7 +44,7 @@ void CreateImagesCacheAction::exec(char key) {
         context->sel_depthDataBgRm = context->depthDataBgRm;
         context->sel_irDataBgRm = context->irDataBgRm;
     } else
-        this->context->step = 1;
+        this->context->step = STEP_START;
 }
 
 void SaveImagesAction::exec(char key) {
@@ -179,7 +179,19 @@ void SaveImagesAction::exec(char key) {
     }
 
     this->context->imagesSaved |= this->context->currImageType;
+
+    //Limpar informações
+    this->context->step = STEP_START;
+    this->context->sel_depthImageBgRm.clear();
+    this->context->sel_rgbImage.clear();
+    this->context->sel_irImageBgRm.clear();
+    this->context->sel_depthImageBgRm.clear();
+    this->context->sel_rgbImageBgRm.clear();
+    this->context->sel_depthDataBgRm.clear();
+    this->context->sel_irDataBgRm.clear();
+
     std::cout << this->context->imagesSaved << std::endl;
+
 }
 
 void SetImageTypeAction::exec(char key)
@@ -205,15 +217,60 @@ void SetImageTypeAction::exec(char key)
             this->context->currImageType = 32;
             break;
     }
-    if (this->context->step == 2) {
-        this->context->step = 1;
+    if (this->context->step == STEP_CACHE_IMAGE) {
+        this->context->step = STEP_START;
         this->context->clearSelected();
     }
 }
 
-void EnableNewDataCollectionAction::exec(char key)
+void SetDemograpichInfoAction::exec(char key)
 {
-    this->context->step = -1;
-    this->context->currImageType = 0;
+    switch (this->context->demographicStep) {
+    case STEP_DEMOG_YEAR:
+        this->context->demographicGender += "sss";
+        break;
+    case STEP_DEMOG_GENDER:
+        if (key == 'f' || key == 'm') {
+            this->context->demographicGender = key;
+        }
+        break;
+    case STEP_DEMOG_COLOR:
+        break;
+    case STEP_DEMOG_WEIGHT:
+        this->context->demographicWeight+= key;
+        break;
+    case STEP_DEMOG_HEIGHT:
+        this->context->demographicHeight += key;
+        break;
+    }
 }
 
+
+
+void EnableNewDataCollectionAction::exec(char)
+{
+    this->context->step = STEP_FINISHED;
+    this->context->currImageType = 0;
+    this->context->imagesSaved = 0;
+}
+
+
+void StartDemographicDataAction::exec(char) {
+    if (this->context->step > STEP_NONE) {
+        this->context->step = STEP_DEMOGRAPHI;
+        this->context->demographicStep = STEP_DEMOG_NONE;
+
+        this->context->sel_depthImageBgRm.clear();
+        this->context->sel_rgbImage.clear();
+        this->context->sel_irImageBgRm.clear();
+        this->context->sel_depthImageBgRm.clear();
+        this->context->sel_rgbImageBgRm.clear();
+        this->context->sel_depthDataBgRm.clear();
+        this->context->sel_irDataBgRm.clear();
+    }
+}
+
+void CloseDemographicDataAction::exec(char)
+{
+    this->context->step = STEP_START;
+}

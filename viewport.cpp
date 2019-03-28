@@ -100,25 +100,32 @@ void InfoViewPort::update(int window) {
 
             glRasterPos2i(5, 15);
             std::string s;
-            if (this->context->step == 0) {
-                s = "Type 1: Start.";
-            }
-            if (this->context->step != 0) {
+
+            if (this->context->step != STEP_NONE) {
                 s = "UUID:" + this->context->uuid;
             }
-            if (this->context->step == -1) {
-                s += " Liberado para coletar novos dados. Type 1: start";
-            }
-            if (this->context->step == 1) {
+
+            switch (this->context->step) {
+            case STEP_NONE:
+                s = "Type 1: Start.";
+                break;
+            case STEP_START:
                 if (this->context->currImageType == 0) {
                     s += " Defina o tipo de imagem. Type [f,t,d,l,r,b]";
                 } else {
                     s += (context->sel_rgbImage.size() ? " With images." : " WithOUT images.");
                     s += " Type 2: capture images";
                 }
-            }
-            if (this->context->step == 2) {
-                s += " Type 9 to save image, or 0 to finish.";
+                break;
+            case STEP_CACHE_IMAGE:
+                s += " Type 9 to save image, 3 to get demographic data, or 0 to finish.";
+                break;
+            case STEP_DEMOGRAPHI:
+                s += " Collecting of demographic data. Type - to close.";
+                break;
+            case STEP_FINISHED:
+                s += " Liberado para coletar novos dados. Type 1: start";
+                break;
             }
 
             for (std::string::iterator i = s.begin(); i != s.end(); ++i)
@@ -127,31 +134,69 @@ void InfoViewPort::update(int window) {
                 glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
             }
 
-            glRasterPos2i(5, 0);
-            s = "Images:";
-            s += (this->context->currImageType & 1)  ? " X " : ((this->context->imagesSaved & 1)  > 0 ? " F " : " - "); //Front
-            s += (this->context->currImageType & 2)  ? " X " : ((this->context->imagesSaved & 2)  > 0 ? " T " : " - "); //Top
-            s += (this->context->currImageType & 4)  ? " X " : ((this->context->imagesSaved & 4)  > 0 ? " D " : " - "); //Down
-            s += (this->context->currImageType & 8)  ? " X " : ((this->context->imagesSaved & 8)  > 0 ? " L " : " - "); //Left
-            s += (this->context->currImageType & 16) ? " X " : ((this->context->imagesSaved & 16) > 0 ? " R " : " - "); //Right
-            s += (this->context->currImageType & 32) ? " X " : ((this->context->imagesSaved & 32) > 0 ? " B " : " - "); //Pocket Lighter
-            if (context->errorCode) {
-                switch (context->errorCode) {
-                case 1:
-                    s+= "Nenhum tipo de imagem informado.";
+            //Informações das imagens coletadas
+            if ((this->context->step & (STEP_START | STEP_CACHE_IMAGE)) > 0)
+            {
+                glRasterPos2i(5, 0);
+                s = "Images:";
+                if (this->context->imagesSaved == 63) {
+                    s += "<       CONCLUDED      >";
+                } else {
+                    s += "F"; s += (this->context->imagesSaved & 1)  > 0 ? "x" : "-"; s += (this->context->currImageType & 1)  ? "< " : "  ";//Front
+                    s += "T"; s += (this->context->imagesSaved & 2)  > 0 ? "x" : "-"; s += (this->context->currImageType & 2)  ? "< " : "  ";//Top
+                    s += "D"; s += (this->context->imagesSaved & 4)  > 0 ? "x" : "-"; s += (this->context->currImageType & 4)  ? "< " : "  ";//Down
+                    s += "L"; s += (this->context->imagesSaved & 8)  > 0 ? "x" : "-"; s += (this->context->currImageType & 8)  ? "< " : "  ";//Left
+                    s += "R"; s += (this->context->imagesSaved & 16) > 0 ? "x" : "-"; s += (this->context->currImageType & 16) ? "< " : "  ";//Right
+                    s += "B"; s += (this->context->imagesSaved & 32) > 0 ? "x" : "-"; s += (this->context->currImageType & 32) ? "< " : "  ";//Pocket Lighter
+                }
+                if (context->errorCode) {
+                    switch (context->errorCode) {
+                    case 1:
+                        s+= "Nenhum tipo de imagem informado.";
+                        break;
+                    case 2:
+                        s+= "Nenhum dado (BMP,DATA) capturado";
+                        break;
+                    }
+                } else {
+                    s += "Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ());
+                    s += "CamDepth:" + std::to_string(this->context->boxPos->getZ());
+                }
+                for (std::string::iterator i = s.begin(); i != s.end(); ++i)
+                {
+                    char c = *i;
+                    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+                }
+            }
+            if (this->context->step == STEP_DEMOGRAPHI)
+            {
+                glRasterPos2i(5, 0);
+                s = "";
+                switch(this->context->demographicStep)
+                {
+                case 4:
+                    s+= "Height:" + this->context->demographicHeight;
+                    break;
+                case 3:
+                    s+= "Weight:" + this->context->demographicWeight;
                     break;
                 case 2:
-                    s+= "Nenhum dado (BMP,DATA) capturado";
+                    s+= "Color:" + this->context->demographicColor;
+                    break;
+                case 1:
+                    s+= "Gender:" + this->context->demographicGender;
+                    break;
+                case 0:
+                    s+= "Years:" + this->context->demographicYaers;
                     break;
                 }
-            } else {
-                s += "Box:" + std::to_string(this->context->boxDim->getX()) + 'x' + std::to_string(this->context->boxDim->getY()) + 'x' + std::to_string(this->context->boxDim->getZ());
-                s += "CamDepth:" + std::to_string(this->context->boxPos->getZ());
-            }
-            for (std::string::iterator i = s.begin(); i != s.end(); ++i)
-            {
-                char c = *i;
-                glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+
+
+                for (std::string::iterator i = s.begin(); i != s.end(); ++i)
+                {
+                    char c = *i;
+                    glutBitmapCharacter(GLUT_BITMAP_9_BY_15, c);
+                }
             }
 
             glMatrixMode(GL_MODELVIEW);

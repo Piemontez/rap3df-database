@@ -16,6 +16,20 @@ class Camera;
 class Context;
 class ContextAction;
 
+const int STEP_FINISHED    = -1;
+const int STEP_NONE        = 1;
+const int STEP_START       = 2;
+const int STEP_CACHE_IMAGE = 4;
+const int STEP_DEMOGRAPHI  = 8;
+const int STEP_IMAGES_STEPS = STEP_NONE | STEP_START | STEP_CACHE_IMAGE;
+
+const int STEP_DEMOG_NONE   = 0;
+const int STEP_DEMOG_YEAR   = 1;
+const int STEP_DEMOG_GENDER = 2;
+const int STEP_DEMOG_COLOR  = 3;
+const int STEP_DEMOG_WEIGHT = 4;
+const int STEP_DEMOG_HEIGHT = 5;
+
 class ContextViewPort
 {
 protected:
@@ -35,6 +49,7 @@ class ContextAction
 protected:
     Context* context;
     char key;
+    int step;
 public:
     virtual void exec(char key) = 0;
 
@@ -50,10 +65,17 @@ class Context
     Context();
 public:
     std::string uuid;
-    int step{0};
+    int step{STEP_NONE};
     int imagesSaved{0};
     int currImageType{0};
     int errorCode{0}; //1 ,2: Nenhuma imagem capturada
+
+    int demographicStep{0};
+    std::string demographicYaers;
+    std::string demographicGender;
+    std::string demographicColor;
+    std::string demographicWeight;
+    std::string demographicHeight;
 
     double freenect_angle;
     Camera* cam;
@@ -119,7 +141,7 @@ public:
     void addViewport(const int window, ContextViewPort*);
     void notify(int window);
 
-    void addAction(const unsigned char k, ContextAction* action);
+    void addAction(const unsigned char k, ContextAction* action, int step = STEP_NONE);
 
     void keyPressed(int key, int x, int y);
     void keyPressed(unsigned char key, int x, int y);

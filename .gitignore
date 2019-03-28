@@ -5,3 +5,4 @@ cmake_install.cmake
 rap3df-acquisition
 rap3df-viewer
 CMakeLists.txt.*
+*.cbp
