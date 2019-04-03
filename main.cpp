@@ -38,7 +38,7 @@ int main(int argc, char **argv)
         context->addViewport(wind, new FrontCamViewPort(1));
         context->addViewport(wind, new RightCamViewPort(1));
     }
-    /*{
+    {
         int wind= context->initWindow("RAP3DF");
 
         context->addViewport(wind, new InfoVoluntaryViewPort);
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
         context->addViewport(wind, new FrontCamViewPort(2));
         context->addViewport(wind, new FrontCamViewPort(3));
         context->addViewport(wind, new RightCamViewPort(2));
-    }*/
+    }
     context->start();
 
     return 0;
