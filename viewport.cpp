@@ -4,6 +4,8 @@
 #include <GL/glut.h>
 #endif
 
+#include <GLFW/glfw3.h>
+
 #include <libfreenect2/libfreenect2.hpp>
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/registration.h>
@@ -229,22 +231,22 @@ void InfoVoluntaryViewPort::update(int window)
             if ((this->context->step & (STEP_START | STEP_CACHE_IMAGE)) > 0) {
                 int images = 0;
 
-                if (this->context->imagesSaved & IMAGE_TYPE_FRONT) images++;
-                if (this->context->imagesSaved & IMAGE_TYPE_UP)    images++;
-                if (this->context->imagesSaved & IMAGE_TYPE_DOWN)  images++;
-                if (this->context->imagesSaved & IMAGE_TYPE_LEFT)  images++;
-                if (this->context->imagesSaved & IMAGE_TYPE_RIGHT) images++;
-                if (this->context->imagesSaved & IMAGE_TYPE_DOWN)  images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_FRONT)  images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_UP)     images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_DOWN)   images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_LEFT)   images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_RIGHT)  images++;
+                if (this->context->imagesSaved & IMAGE_TYPE_BURNED) images++;
 
-                if (this->context->currImageType)
-                    images++;
+                /*if (this->context->currImageType)
+                    images++;*/
                 s += std::to_string(images);
             } else {
                 s += "0";
             }
             s += " / 6";
 
-            if (this->context->imagesSaved & 63)
+            if ((this->context->imagesSaved & 63) == 63)
                 s += " Finished";
             else
                 switch (this->context->currImageType) {
@@ -332,21 +334,27 @@ void TriangleCamViewPort::update(int window) {
             int w = context->_depth->width;
             int h = context->_depth->height;
             int j;
+            int max{0},min{0};
 
             for (int r = 0; r < (h -1); ++r)
+            {
                 for (int c = 0; c < (w -1); ++c)
                 {
-                    int i = ((r * w) + c) * 4;
+//                    int i = ((r * w) + c) * 4;
+//                    const uint8_t *p = reinterpret_cast<uint8_t*>(&context->registered->data[i]);
+//                    if (!context->_rgb->status)
+//                        glColor3ub( p[2], p[1], p[0]);
 
-                    const uint8_t *p = reinterpret_cast<uint8_t*>(&context->registered->data[i]);
+                    int i = ((r * w) + c) * static_cast<int>(context->_ir->bytes_per_pixel);
+                    const uint *p = reinterpret_cast<uint*>(&context->_ir->data[i+2]);
 
-                    if (!context->_rgb->status)
-                        glColor3ub( p[2], p[1], p[0]);
+                    std::cout<< '<< MM' << p[0] << std::endl;
+                    uint color = p[0];
+                    glColor3ub(color, color, color );
 
-                    if (!context->_depth->status)
-                        MakeTriangle(r, c, w, h, context->_depth->data, 4);
-
+                    MakeTriangle(r, c, w, h, context->_depth->data, 4);
                 }
+            }
         }
         glEnd();
     }
@@ -406,10 +414,12 @@ void BoxExtractViewPort::update(int window) {
                         context->depthDataBgRm.push_back(depth);
 
                         //IR extract
-                        uint16_t ir = context->_ir->data[i+2];
+                        const uint8_t *p = reinterpret_cast<uint8_t*>(&context->_ir->data[i+2]);
+                        uint8_t ir = p[0] - 128;
 
-                        context->irImageBgRm.push_back(ir & 0xff);
-                        context->irImageBgRm.push_back(ir >> 8);
+
+                        context->irImageBgRm.push_back(ir);
+                        context->irImageBgRm.push_back(0);
                         context->irImageBgRm.push_back(0);
 
                         context->irDataBgRm.push_back(ir);

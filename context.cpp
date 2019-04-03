@@ -68,7 +68,7 @@ void Context::init(int argc, char **argv)
     }
 
 //    pipeline = new libfreenect2::CpuPacketPipeline();
-    pipeline = new libfreenect2::OpenGLPacketPipeline();
+    pipeline = new libfreenect2::OpenCLKdePacketPipeline();
     dev = freenect2.openDevice(serial, pipeline);
 //    dev = freenect2.openDevice(serial);
 
