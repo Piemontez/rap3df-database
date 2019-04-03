@@ -346,11 +346,10 @@ void TriangleCamViewPort::update(int window) {
 //                        glColor3ub( p[2], p[1], p[0]);
 
                     int i = ((r * w) + c) * static_cast<int>(context->_ir->bytes_per_pixel);
-                    const uint *p = reinterpret_cast<uint*>(&context->_ir->data[i+2]);
+                    unsigned short *p = reinterpret_cast<unsigned short*>(&context->_ir->data[i]);
 
-                    std::cout<< '<< MM' << p[0] << std::endl;
-                    uint color = p[0];
-                    glColor3ub(color, color, color );
+                    unsigned char color = p[1] >> 2;
+                    glColor3ub(color, 0, 0);
 
                     MakeTriangle(r, c, w, h, context->_depth->data, 4);
                 }
@@ -414,9 +413,8 @@ void BoxExtractViewPort::update(int window) {
                         context->depthDataBgRm.push_back(depth);
 
                         //IR extract
-                        const uint8_t *p = reinterpret_cast<uint8_t*>(&context->_ir->data[i+2]);
-                        uint8_t ir = p[0] - 128;
-
+                        unsigned short *p = reinterpret_cast<unsigned short*>(&context->_ir->data[i]);
+                        unsigned char ir = p[1] >> 2;
 
                         context->irImageBgRm.push_back(ir);
                         context->irImageBgRm.push_back(0);
