@@ -16,19 +16,21 @@
 
 void foo();
 
-int width = 640;
-int height = 480;
-int window = 0;
+static int imageType = 0;
 
-GLfloat xv = 0.f;
-int xvOrient = 1;
+static int zoom = -300;
+static int width = 640;
+static int height = 480;
+static int window = 0;
 
-float f = 595.f;
-int filePos = 0;
+static GLfloat xv = 0.f;
+static int xvOrient = 1;
 
-std::vector< std::vector<uint16_t> >files;
-std::vector< std::vector<uint16_t> >irFiles;
-std::vector< std::vector<uint16_t> >colorFiles;
+static std::vector< std::vector<uint16_t>>::size_type filePos = 0;
+
+static std::vector< std::vector<uint16_t> >files;
+static std::vector< std::vector<uint16_t> >irFiles;
+static std::vector< std::vector<uint16_t> >colorFiles;
 
 int main(int argc, char **argv)
 {
@@ -77,7 +79,6 @@ int main(int argc, char **argv)
     }
 
     {//Load depth data
-        std::vector<std::string>::iterator i;
         for (auto && i = facesUUIDs.begin(); i != facesUUIDs.end(); i++)
         {
             std::string uuid = (*i).asString();
@@ -147,6 +148,7 @@ int main(int argc, char **argv)
         int w = 119;
         int h = 149;
 
+        std::vector<uint16_t>::size_type i, j;
         std::vector<uint16_t> file = files[filePos];
         std::vector<uint16_t> irFile = irFiles[filePos];
 
@@ -166,20 +168,19 @@ int main(int argc, char **argv)
         glLoadIdentity();
         {
             glRotatef(180, 1.f, 0.f, 0.f); // Rotate our camera on the x-axis (looking up and down)
-            glTranslatef(xv*3, 0, abs((int)xv * 2));
+            glTranslatef(xv*3, 0, abs(xv * 2));
             glRotatef(-xv, 0.f, 1.f, 0.f);
 
             glPointSize(1.0f);
 //            glBegin(GL_POINTS);
             glBegin(GL_TRIANGLES);
 
-            int j;
-            uint16_t min = 0, max = 0;
+            uint16_t min = 0, max = 0, z;
             float range;
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
-                    int i = ((y * w) + x);
+                    i = static_cast<unsigned long>(y * w) + static_cast<unsigned long>(x);
                     if (!file[i]) continue;
 
                     if (max < file[i]) {
@@ -197,37 +198,37 @@ int main(int argc, char **argv)
             for (int y = 0; y < (h -1); ++y)
                 for (int x = 0; x < (w -1); ++x)
                 {
-                    int i = ((y * w) + x);
+                    i = static_cast< std::vector<uint16_t>::size_type >((y * w) + x);
 
                     if (file[i] == 0) continue;
 
-                    if (false) {
+                    if (imageType == 0) {
                         glColor3f(1- range * (file[i] - min) * 3,
                                    (range * (file[i] - min)),
                                   (range * (file[i] - min) * 2));
                     } else {
-                        glColor3ub(irFile[i], 0, 0);
+                        glColor3ub(static_cast<unsigned char>(irFile[i]), 0, 0);
                     }
 
-                    if (file[i] >= min && file[i+4] >= min && file[i+(w*4)] >= min
-                     && file[i] < max && file[i+4] < max && file[i+(w*4)] < max)
+                    if (file[i] >= min && file[i+4] >= min && file[i+static_cast<unsigned long>(w*4)] >= min
+                     && file[i] < max && file[i+4] < max && file[i+static_cast<unsigned long>(w*4)] < max)
                     {
-                        j = i;
-                        glVertex3f(x-(w/2), y-(h/2), file[j] * 3 - 320);
-                        j = i+1;
-                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 320);
-                        j = i+(w);
-                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 320);
+                        j = i; z = !file[j] ? file[i] : file[j];
+                        glVertex3f(x-(w/2), y-(h/2), z * 3+ zoom);
+                        j = i+1; z = !file[j] ? file[i] : file[j];
+                        glVertex3f(x+1-(w/2), y-(h/2), z * 3+ zoom);
+                        j = i+static_cast<unsigned long>(w); z = !file[j] ? file[i] : file[j];
+                        glVertex3f(x-(w/2), y+1-(h/2), z * 3+ zoom);
                     }
-                    if (file[i+4] > min && file[i+(w*4)] > min && file[i+(w*4)+4] > min
-                     && file[i+4] < max && file[i+(w*4)] < max && file[i+(w*4)+4] < max)
+                    if (file[i+4] > min && file[i+static_cast<unsigned long>(w*4)] > min && file[i+static_cast<unsigned long>(w*4)+4] > min
+                     && file[i+4] < max && file[i+static_cast<unsigned long>(w*4)] < max && file[i+static_cast<unsigned long>(w*4)+4] < max)
                     {
-                        j = i+1;
-                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 320);
-                        j = i+(w);
-                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 320);
-                        j = i+(w)+1;
-                        glVertex3f(x+1-(w/2), y+1-(h/2), file[j] * 3 - 320);
+                        j = i+1; z = !file[j] ? file[i] : file[j];
+                        glVertex3f(x+1-(w/2), y-(h/2), z * 3+ zoom);
+                        j = i+static_cast<unsigned long>(w); z = !file[j] ? file[i] : file[j];
+                        glVertex3f(x-(w/2), y+1-(h/2), z * 3+ zoom);
+                        j = i+static_cast<unsigned long>(w)+1; z = !file[j] ? file[i] : file[j];
+                        glVertex3f(x+1-(w/2), y+1-(h/2), z * 3 + zoom);
                     }
 
                 }
@@ -250,11 +251,11 @@ int main(int argc, char **argv)
         glViewport(0, 0, width, height);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        gluPerspective(50.0, (float)width / height, 1.0, 12000.0);
+        gluPerspective(50.0, static_cast<double>(width) / height, 1.0, 12000.0);
     });
 
 
-    glutKeyboardFunc([] (unsigned char key, int x, int y) {
+    glutKeyboardFunc([] (unsigned char key, int UNUSED(x), int UNUSED(y)) {
         if (key == 0x1B) {// ESC
             glutDestroyWindow(window);
             exit(0);
@@ -264,9 +265,8 @@ int main(int argc, char **argv)
             case  'Q':
             case  'q':
                 xv = 0.f;
-                filePos--;
-                if (filePos < 0)
-                    filePos = 0;
+                if (filePos != 0)
+                    filePos--;
 
                 glutPostRedisplay();
                 break;
@@ -281,6 +281,11 @@ int main(int argc, char **argv)
                 break;
             case  'w':
             case  'W':
+                glutPostRedisplay();
+                break;
+            case  'p':
+            case  'P':
+                imageType = (++imageType) % 3;
                 glutPostRedisplay();
                 break;
         }
