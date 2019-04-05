@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <locale>
 
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
@@ -9,6 +10,8 @@
 #include <GL/glut.h>
 #endif
 
+#include "json/value.h"
+#include "json/reader.h"
 #include "utils.h"
 
 void foo();
@@ -25,68 +28,75 @@ int filePos = 0;
 
 std::vector< std::vector<uint16_t> >files;
 std::vector< std::vector<uint16_t> >colorFiles;
-std::vector<std::string> widths;
-std::vector<std::string> heights;
 
 int main(int argc, char **argv)
 {
-    std::string csvFilePath;
-    //csvFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
-    csvFilePath.append("/home/piemontez/Projects/piemontez/rap3df-database/rap3df_data").append("/").append("database.csv");
+    std::string uuidFilter;
+    std::string jsonFilePath;
+    jsonFilePath.append(IMAGES_DIR).append("/").append(JSON_IMAGES_INFO);
 
-    std::cout << csvFilePath << "\n";
-    //Carrega arquivo com arquivos
-    std::vector<std::string> folders;
+    if (argc >= 2) {
+        uuidFilter = argv[1];
 
-    {//load csv file
-        std::FILE* csvFile = std::fopen(csvFilePath.c_str(),"r");
-        if (csvFile) {
-            std::vector<char> foldername;
-            char buf[2];
-            int pos = 0;
-            while (std::fgets(buf, sizeof buf, csvFile) != NULL)
-            {
-                if (buf[0] == '\n') {
-                    foldername.clear();
-                    pos = 0;
-                } else if(buf[0] != ';') {
-                    foldername.push_back(buf[0]);
-                } else if(buf[0] == ';') {
-                    switch (pos) {
-                    case 0:
-                        folders.push_back(std::string(foldername.begin(), foldername.end()));
-                        foldername.clear();
-                        break;
-                    case 1:
-                        widths.push_back(std::string(foldername.begin(), foldername.end()));
-                        foldername.clear();
-                        break;
-                    case 2:
-                        heights.push_back(std::string(foldername.begin(), foldername.end()));
-                        foldername.clear();
-                        break;
-                    }
-                    pos++;
-                }
-            }
+        std::locale loc;
+        for (std::string::size_type i =0; i < uuidFilter.length(); i++) {
+          uuidFilter[i] = std::toupper(uuidFilter[i], loc);
         }
     }
 
-    if (!folders.size()) {
+    std::cout << "Openning " << jsonFilePath << std::endl;
+    std::cout << "Filter: " << uuidFilter << std::endl;
+    //Carrega arquivo com arquivos
+    Json::Value root;
+    Json::Value facesUUIDs;
+
+    {//load json file
+        std::FILE* jsonFile = std::fopen(jsonFilePath.c_str(),"r");
+        if (jsonFile) {
+            std::cout << "json opened" << std::endl;
+
+            Json::Reader reader;
+            std::string json;
+            char buf[2];
+            while (std::fgets(buf, sizeof buf, jsonFile) != nullptr) {
+                json.push_back(buf[0]);
+            }
+            std::fclose(jsonFile);
+
+            reader.parse(json, root);
+        }
+    }
+
+    if (root["_faces"].empty()) {
         std::cout << "No images files found." << std::endl;
         exit(0);
+    } else {
+        facesUUIDs = root["_faces"];
+        std::cout << facesUUIDs.size() << " faces in json file." << std::endl;
     }
 
     {//Load depth data
-//        for (std::vector<std::string>::iterator i = folders.end(); i != folders.begin(); i--)
-        for (std::vector<std::string>::iterator i = folders.begin(); i != folders.end(); i++)
+        std::vector<std::string>::iterator i;
+        for (auto && i = facesUUIDs.begin(); i != facesUUIDs.end(); i++)
         {
-            csvFilePath.clear();
-            csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(FILE_DATA_DEPTH_BG_REM);
+            std::string uuid = (*i).asString();
+            if (uuidFilter.length() && uuidFilter.compare(uuid) != 0) continue;
+
+
+            Json::Value voluntary = root[uuid];
+            if (voluntary.empty() && !voluntary["front"].begin()->isObject()) continue;
+
+            Json::Value front = *voluntary["front"].begin();
+            std::string dethPath = front ["depth_data_with_bg"].asString();
+
+            jsonFilePath.clear();
+            jsonFilePath.append(dethPath);
+
+            std::cout << jsonFilePath << std::endl;
 
             std::vector<uint16_t> data;
-            std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");
-            if (dataFile!=NULL)
+            std::FILE * dataFile = std::fopen(jsonFilePath.c_str(),"r");
+            if (dataFile!=nullptr)
             {
 
                 int i = 0;
@@ -95,31 +105,10 @@ int main(int argc, char **argv)
                 {
                     data.push_back(info);
                 }
-                std::cout << std::endl;
                 files.push_back(data);
             }
-
-            /*csvFilePath.clear();
-            csvFilePath.append(IMAGES_DIR).append("/").append(*i).append("/").append(KINECT_1_XYZ_DATA_FILE);
-
-            std::vector<uint16_t> data;
-            std::FILE * dataFile = std::fopen(csvFilePath.c_str(),"r");
-            if (dataFile!=NULL)
-            {
-
-                int i = 0;
-                uint16_t info;
-                while (std::fread(&info, 1, sizeof(uint16_t), dataFile) != 0)
-                {
-                    data.push_back(info);
-                }
-                std::cout << std::endl;
-                colorFiles.push_back(data);
-            }*/
         }
     }
-
-    //Exibe os arquivos
 
     glutInit(&argc, argv);
 
@@ -141,8 +130,8 @@ int main(int argc, char **argv)
     gluPerspective(50.0, 1.0, 900.0, 11000.0);
 
     glutDisplayFunc([] () {
-        int w = atoi(widths[filePos].c_str());
-        int h = atoi(heights[filePos].c_str());
+        int w = 119;
+        int h = 149;
 
         std::vector<uint16_t> file = files[filePos];
 
@@ -203,21 +192,21 @@ int main(int argc, char **argv)
                      && file[i] < max && file[i+4] < max && file[i+(w*4)] < max)
                     {
                         j = i;
-                        glVertex3f(x-(w/2), y-(h/2), file[j] * 2);
+                        glVertex3f(x-(w/2), y-(h/2), file[j] * 3 - 300);
                         j = i+4;
-                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 2);
+                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 300);
                         j = i+(w * 4);
-                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 2);
+                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 300);
                     }
                     if (file[i+4] > min && file[i+(w*4)] > min && file[i+(w*4)+4] > min
                      && file[i+4] < max && file[i+(w*4)] < max && file[i+(w*4)+4] < max)
                     {
                         j = i+4;
-                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 2);
+                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 300);
                         j = i+(w*4);
-                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 2);
+                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 300);
                         j = i+(w*4)+4;
-                        glVertex3f(x+1-(w/2), y+1-(h/2), file[j] * 2);
+                        glVertex3f(x+1-(w/2), y+1-(h/2), file[j] * 3 - 300);
                     }
 
                 }
