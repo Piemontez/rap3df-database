@@ -27,6 +27,7 @@ float f = 595.f;
 int filePos = 0;
 
 std::vector< std::vector<uint16_t> >files;
+std::vector< std::vector<uint16_t> >irFiles;
 std::vector< std::vector<uint16_t> >colorFiles;
 
 int main(int argc, char **argv)
@@ -87,25 +88,38 @@ int main(int argc, char **argv)
             if (voluntary.empty() && !voluntary["front"].begin()->isObject()) continue;
 
             Json::Value front = *voluntary["front"].begin();
-            std::string dethPath = front ["depth_data_with_bg"].asString();
 
+            std::string dethPath = front ["depth_data_with_bg"].asString();
             jsonFilePath.clear();
             jsonFilePath.append(dethPath);
-
             std::cout << jsonFilePath << std::endl;
 
             std::vector<uint16_t> data;
             std::FILE * dataFile = std::fopen(jsonFilePath.c_str(),"r");
             if (dataFile!=nullptr)
             {
-
-                int i = 0;
                 uint16_t info;
                 while (std::fread(&info, 1, sizeof(uint16_t), dataFile) != 0)
                 {
                     data.push_back(info);
                 }
                 files.push_back(data);
+            }
+
+            std::string irPath = front ["ir_data_with_bg"].asString();
+            jsonFilePath.clear();
+            jsonFilePath.append(irPath);
+            std::cout << jsonFilePath << std::endl;
+
+            std::vector< uint16_t > dataIr;
+            dataFile = std::fopen(jsonFilePath.c_str(),"r");
+            if (dataFile!=nullptr)
+            {
+                uint16_t info;
+                while (std::fread(&info, 1, sizeof(uint16_t), dataFile) != 0) {
+                    dataIr.push_back(info);
+                }
+                irFiles.push_back(dataIr);
             }
         }
     }
@@ -134,6 +148,7 @@ int main(int argc, char **argv)
         int h = 149;
 
         std::vector<uint16_t> file = files[filePos];
+        std::vector<uint16_t> irFile = irFiles[filePos];
 
         if (xv > (w/2)) {
             xvOrient = -1;
@@ -184,29 +199,35 @@ int main(int argc, char **argv)
                 {
                     int i = ((y * w) + x);
 
-                    glColor3f(1- range * (file[i] - min) * 3,
-                               (range * (file[i] - min)),
-                              (range * (file[i] - min) * 2));
+                    if (file[i] == 0) continue;
+
+                    if (false) {
+                        glColor3f(1- range * (file[i] - min) * 3,
+                                   (range * (file[i] - min)),
+                                  (range * (file[i] - min) * 2));
+                    } else {
+                        glColor3ub(irFile[i], 0, 0);
+                    }
 
                     if (file[i] >= min && file[i+4] >= min && file[i+(w*4)] >= min
                      && file[i] < max && file[i+4] < max && file[i+(w*4)] < max)
                     {
                         j = i;
-                        glVertex3f(x-(w/2), y-(h/2), file[j] * 3 - 300);
-                        j = i+4;
-                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 300);
-                        j = i+(w * 4);
-                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 300);
+                        glVertex3f(x-(w/2), y-(h/2), file[j] * 3 - 320);
+                        j = i+1;
+                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 320);
+                        j = i+(w);
+                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 320);
                     }
                     if (file[i+4] > min && file[i+(w*4)] > min && file[i+(w*4)+4] > min
                      && file[i+4] < max && file[i+(w*4)] < max && file[i+(w*4)+4] < max)
                     {
-                        j = i+4;
-                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 300);
-                        j = i+(w*4);
-                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 300);
-                        j = i+(w*4)+4;
-                        glVertex3f(x+1-(w/2), y+1-(h/2), file[j] * 3 - 300);
+                        j = i+1;
+                        glVertex3f(x+1-(w/2), y-(h/2), file[j] * 3 - 320);
+                        j = i+(w);
+                        glVertex3f(x-(w/2), y+1-(h/2), file[j] * 3 - 320);
+                        j = i+(w)+1;
+                        glVertex3f(x+1-(w/2), y+1-(h/2), file[j] * 3 - 320);
                     }
 
                 }
