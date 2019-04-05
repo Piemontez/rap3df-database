@@ -48,6 +48,7 @@ int main(int argc, char **argv)
         context->addViewport(wind, new FrontCamViewPort(3));
         context->addViewport(wind, new RightCamViewPort(2));
     }
+
     context->start();
 
     return 0;

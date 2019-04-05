@@ -13,11 +13,11 @@ std::string UUID(int size = 7) {
     std::string uuid;
     uuid.reserve(size);
 
-    srand (time(NULL));
+    srand (static_cast<unsigned int>(time(nullptr)));
 
     const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
     const size_t charmapLength = 36;
-    auto generator = [&](){ return charmap[rand()%charmapLength]; };
+    auto generator = [&](){ return charmap[static_cast<unsigned int>(rand())%charmapLength]; };
 
     std::generate_n(std::back_inserter(uuid), size, generator);
 
@@ -119,7 +119,7 @@ void SaveImagesAction::exec(char key) {
         std::string json;
         if (csvFile) {
             char buf[2];
-            while (std::fgets(buf, sizeof buf, csvFile) != NULL) {
+            while (std::fgets(buf, sizeof buf, csvFile) != nullptr) {
                 json.push_back(buf[0]);
             }
             std::fclose(csvFile);
@@ -313,7 +313,7 @@ void EnableNewDataCollectionAction::exec(char)
             std::string json;
             if (csvFile) {
                 char buf[2];
-                while (std::fgets(buf, sizeof buf, csvFile) != NULL) {
+                while (std::fgets(buf, sizeof buf, csvFile) != nullptr) {
                     json.push_back(buf[0]);
                 }
                 std::fclose(csvFile);
@@ -358,6 +358,8 @@ void EnableNewDataCollectionAction::exec(char)
         this->context->demographicWeight = "";
         this->context->demographicHeight = "";
 
+        std::string viewer = "./rap3df-viewer " + uuid;
+        system(viewer.c_str());
     }
 
     this->context->step = STEP_FINISHED;

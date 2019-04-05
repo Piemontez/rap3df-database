@@ -48,13 +48,13 @@ void MakeTriangle(int r, int c, int w, int h, unsigned char* data, int canais) {
     }
 }
 
-void BoxCamViewPort::update(int window) {
+void BoxCamViewPort::update(int UNUSED(window)) {
 
     Vec3<int>* boxPos = Context::instance()->boxPos;
     Vec3<int>* boxDim = Context::instance()->boxDim;
 
     glBegin(GL_QUADS);
-    glColor4f(0, 0,  1, 0.4);
+    glColor4f(0, 0,  1, 0.4f);
     glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
     glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() - boxDim->getZ());
     glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
@@ -65,7 +65,7 @@ void BoxCamViewPort::update(int window) {
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
 
-    glColor4f(0, 0,  0.5, 0.2);
+    glColor4f(0, 0,  0.5, 0.2f);
     glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() - boxDim->getZ());
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
@@ -76,7 +76,7 @@ void BoxCamViewPort::update(int window) {
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
     glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
 
-    glColor4f(0, 1,  0, 0.8);
+    glColor4f(0, 1,  0, 0.8f);
     glVertex3f(boxPos->getX() + boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() - boxDim->getY(), boxPos->getZ() + boxDim->getZ());
     glVertex3f(boxPos->getX() - boxDim->getX(), boxPos->getY() + boxDim->getY(), boxPos->getZ() + boxDim->getZ());
@@ -282,11 +282,11 @@ void PointCamViewPort::update(int window) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     {
-        glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-        glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-        glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
+        glRotated(context->cam->getXRot(), 1.0, 0.0, 0.0); // Rotate our camera on the x-axis (looking up and down)
+        glRotated(context->cam->getYRot(), 0.0, 1.0, 0.0); // Rotate our camera on the  y-axis (looking left and right)
+        glRotated(context->cam->getZRot(), 0.0, 0.0, 1.0);
         //            glTranslatef( -context->cam->getXPos()-(context->width(window)/2), -context->cam->getYPos()-(context->height(window)/3), -context->cam->getZPos()+500 );
-        glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
+        glTranslated( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
         glPointSize(1.0f);
         glBegin(GL_POINTS);
@@ -322,11 +322,11 @@ void TriangleCamViewPort::update(int window) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     {
-        glRotatef(context->cam->getXRot(), 1.0f, 0.0f, 0.0f); // Rotate our camera on the x-axis (looking up and down)
-        glRotatef(context->cam->getYRot(), 0.0f, 1.0f, 0.0f); // Rotate our camera on the  y-axis (looking left and right)
-        glRotatef(context->cam->getZRot(), 0.0f, 0.0f, 1.0f);
+        glRotated(context->cam->getXRot(), 1.0, 0.0, 0.0); // Rotate our camera on the x-axis (looking up and down)
+        glRotated(context->cam->getYRot(), 0.0, 1.0, 0.0); // Rotate our camera on the  y-axis (looking left and right)
+        glRotated(context->cam->getZRot(), 0.0, 0.0, 1.0);
         //            glTranslatef( -context->cam->getXPos()-(context->width(window)/2), -context->cam->getYPos()-(context->height(window)/3), -context->cam->getZPos()+500 );
-        glTranslatef( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
+        glTranslated( -context->cam->getXPos(), -context->cam->getYPos(), -context->cam->getZPos() );
 
         glBegin(GL_TRIANGLES);
         if (context->_depth)

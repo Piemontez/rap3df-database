@@ -12,7 +12,7 @@ void WriteBMPFile(std::vector<uint8_t> pixelVec, std::string fileName, uint32_t 
 {
     BYTE pixels [3*WIDTH*HEIGHT+ sizeof(BITMAPINFOHEADER) + 1 * sizeof(RGBQUAD)];
 
-    for(int i=0; i<3*WIDTH*HEIGHT; i+=3)
+    for(std::vector<uint8_t>::size_type i =0; i < static_cast< std::vector<uint8_t>::size_type >(3*WIDTH*HEIGHT); i+=3)
     {
         pixels[i+2] = pixelVec[i+0];
         pixels[i+1] = pixelVec[i+1];
@@ -29,7 +29,7 @@ void WriteFile(std::vector<uint16_t> dataVec, std::string fileName, uint32_t WID
 {
        FILE* filePtr = fopen(fileName.c_str(), "wb");
 
-       for(int i=0; i<WIDTH*HEIGHT; i++)
+       for(std::vector<uint8_t>::size_type i=0; i<WIDTH*HEIGHT; i++)
        {
            fwrite(&dataVec[i], 1, sizeof(uint16_t), filePtr);
        }
