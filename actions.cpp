@@ -9,7 +9,7 @@
 #include "json/reader.h"
 #include "json/writer.h"
 
-std::string UUID(int size = 7) {
+std::string UUID(int size = 10) {
     std::string uuid;
     uuid.reserve(size);
 
