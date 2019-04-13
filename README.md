@@ -9,7 +9,9 @@ com o intúito de publicações de artigos ou trabalhos escolares.
 
 Base de dados criada em 2017, com população de 64 voluntários, e um total de 267 amostras de imagens frontais e pose aleatórias.
 
-[[File:imgs/rap3df_01_example.png|border]]
+
+![alt Exemplos de coleta](imgs/rap3df_01_example.png)
+
 
 ### build
 
