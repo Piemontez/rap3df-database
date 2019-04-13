@@ -12,13 +12,13 @@ Base de dados criada em 2017, com população de 64 voluntários, e um total de 
 
 ### build
 
-´´´
+```
 cmake ./
 make
-´´´
+```
 
 ### run
 
-´´´
+```
 ./rap3df-viewer
-´´´
+```
