@@ -7,20 +7,23 @@ com o intúito de publicações de artigos ou trabalhos escolares.
 
 ### rap3df_data
 
-Base de dados criada em 2017, com população de 64 voluntários, e um total de 267 amostras de imagens frontais e pose aleatórias.
+Base de dados criada em 2017, com população de 64 voluntários, e um total de 267 amostras de imagens frontais e em poses aleatórias.
 
 
 ![alt Exemplos de coleta](imgs/rap3df_01_example.png)
 
 
-### build
+### Build
+
+Este projeto utiliza as bibliotecas libfreenect2, OpenGL, Glut e Jsoncpp.
+Para compilar o projeto, basta executar os seguintes comandos. 
 
 ```
 cmake ./
 make
 ```
 
-### run
+### Run
 
 ```
 ./rap3df-viewer
