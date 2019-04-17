@@ -461,6 +461,74 @@
          }
       ]
    },
+   "8RTS0AT84Z" : {
+      "burned" : [
+         {
+            "depth_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_MX8.data",
+            "depth_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_MX8.bmp",
+            "ir_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_bgRm_MX8.data",
+            "ir_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_rmBg_MX8.bmp",
+            "rgb" : "rap3df_data_02/8RTS0AT84Z/rgb_MX8.bmp",
+            "rgb_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_rgb_bgRm_MX8.bmp"
+         }
+      ],
+      "demography" : {
+         "color" : "branca",
+         "gender" : "m",
+         "height" : "183",
+         "weight" : "105",
+         "yaers" : "24"
+      },
+      "down" : null,
+      "front" : [
+         {
+            "depth_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_OW8.data",
+            "depth_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_OW8.bmp",
+            "ir_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_bgRm_OW8.data",
+            "ir_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_rmBg_OW8.bmp",
+            "rgb" : "rap3df_data_02/8RTS0AT84Z/rgb_OW8.bmp",
+            "rgb_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_rgb_bgRm_OW8.bmp"
+         },
+         {
+            "depth_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_3JE.data",
+            "depth_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_3JE.bmp",
+            "ir_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_bgRm_3JE.data",
+            "ir_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_rmBg_3JE.bmp",
+            "rgb" : "rap3df_data_02/8RTS0AT84Z/rgb_3JE.bmp",
+            "rgb_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_rgb_bgRm_3JE.bmp"
+         }
+      ],
+      "left" : [
+         {
+            "depth_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_C4Y.data",
+            "depth_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_C4Y.bmp",
+            "ir_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_bgRm_C4Y.data",
+            "ir_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_rmBg_C4Y.bmp",
+            "rgb" : "rap3df_data_02/8RTS0AT84Z/rgb_C4Y.bmp",
+            "rgb_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_rgb_bgRm_C4Y.bmp"
+         }
+      ],
+      "right" : [
+         {
+            "depth_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_D4Q.data",
+            "depth_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_D4Q.bmp",
+            "ir_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_bgRm_D4Q.data",
+            "ir_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_rmBg_D4Q.bmp",
+            "rgb" : "rap3df_data_02/8RTS0AT84Z/rgb_D4Q.bmp",
+            "rgb_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_rgb_bgRm_D4Q.bmp"
+         }
+      ],
+      "up" : [
+         {
+            "depth_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_8MV.data",
+            "depth_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_bgRm_8MV.bmp",
+            "ir_data_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_bgRm_8MV.data",
+            "ir_with_bg" : "rap3df_data_02/8RTS0AT84Z/ir_rmBg_8MV.bmp",
+            "rgb" : "rap3df_data_02/8RTS0AT84Z/rgb_8MV.bmp",
+            "rgb_with_bg" : "rap3df_data_02/8RTS0AT84Z/depth_rgb_bgRm_8MV.bmp"
+         }
+      ]
+   },
    "9HF4CQU" : {
       "burned" : [
          {
@@ -2189,6 +2257,7 @@
       "2NXTX3OXZZ",
       "8LXZ8DKYF4",
       "7EG8PJ2GVL",
-      "ZVMVVXOKSS"
+      "ZVMVVXOKSS",
+      "8RTS0AT84Z"
    ]
 }
