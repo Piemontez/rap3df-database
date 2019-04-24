@@ -28,7 +28,7 @@ Context::Context()
     height2 = 424;
 
     //boxPos = new Vec3<int>(0,0, 200);
-    boxPos = new Vec3<int>(0,0, 170);
+    boxPos = new Vec3<int>(0,0, 200);
     boxDim = new Vec3<int>(60, 75, 60);
 
     f = 595.f;
