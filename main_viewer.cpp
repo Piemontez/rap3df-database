@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 
             Json::Value front = *voluntary["front"].begin();
 
-            std::string dethPath = front ["depth_data_with_bg"].asString();
+            std::string dethPath = front["depth_data_with_bg"].asString();
             jsonFilePath.clear();
             jsonFilePath.append(dethPath);
             std::cout << jsonFilePath << std::endl;
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
                 files.push_back(data);
             }
 
-            std::string irPath = front ["ir_data_with_bg"].asString();
+            std::string irPath = front["ir_data_with_bg"].asString();
             jsonFilePath.clear();
             jsonFilePath.append(irPath);
             std::cout << jsonFilePath << std::endl;
@@ -210,8 +210,8 @@ int main(int argc, char **argv)
                         glColor3ub(static_cast<unsigned char>(irFile[i]), 0, 0);
                     }
 
-                    if (file[i] >= min && file[i+4] >= min && file[i+static_cast<unsigned long>(w*4)] >= min
-                     && file[i] < max && file[i+4] < max && file[i+static_cast<unsigned long>(w*4)] < max)
+//                    if (file[i] >= min && file[i+4] >= min && file[i+static_cast<unsigned long>(w*4)] >= min
+//                     && file[i] < max && file[i+4] < max && file[i+static_cast<unsigned long>(w*4)] < max)
                     {
                         j = i; z = !file[j] ? file[i] : file[j];
                         glVertex3f(x-(w/2), y-(h/2), z * 3+ zoom);
@@ -220,8 +220,8 @@ int main(int argc, char **argv)
                         j = i+static_cast<unsigned long>(w); z = !file[j] ? file[i] : file[j];
                         glVertex3f(x-(w/2), y+1-(h/2), z * 3+ zoom);
                     }
-                    if (file[i+4] > min && file[i+static_cast<unsigned long>(w*4)] > min && file[i+static_cast<unsigned long>(w*4)+4] > min
-                     && file[i+4] < max && file[i+static_cast<unsigned long>(w*4)] < max && file[i+static_cast<unsigned long>(w*4)+4] < max)
+//                    if (file[i+4] > min && file[i+static_cast<unsigned long>(w*4)] > min && file[i+static_cast<unsigned long>(w*4)+4] > min
+//                     && file[i+4] < max && file[i+static_cast<unsigned long>(w*4)] < max && file[i+static_cast<unsigned long>(w*4)+4] < max)
                     {
                         j = i+1; z = !file[j] ? file[i] : file[j];
                         glVertex3f(x+1-(w/2), y-(h/2), z * 3+ zoom);
